@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run start)",
+      "Bash(npm install)",
+      "Bash(npm install *)",
+      "Bash(npx supabase gen types *)",
+      "Bash(npx supabase migration *)",
+      "Bash(npx supabase db *)",
+      "Bash(npx supabase status)",
+      "Bash(npx supabase login)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log)",
+      "Bash(git log *)",
+      "Bash(git branch)",
+      "Bash(git branch *)",
+      "Bash(git show)",
+      "Bash(git show *)",
+      "Bash(jq *)",
+      "Bash(cat .claude/typecheck.log)",
+      "Bash(cat .claude/lint.log)",
+      "Bash(cat .claude/tsc-precommit.log)",
+      "Bash(tail -* .claude/*.log)",
+      "Bash(tail .claude/*.log)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "branch=$(git branch --show-current 2>/dev/null || echo '—'); count=$(git status --short 2>/dev/null | wc -l | tr -d ' '); jq -nc --arg b \"$branch\" --arg c \"$count\" '{hookSpecificOutput:{hookEventName:\"SessionStart\",additionalContext:(\"Anna · branch: \" + $b + \" · changed files: \" + $c)},systemMessage:(\"Anna · \" + $b + \" · \" + $c + \" souborů\")}'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty'); case \"$f\" in *.ts|*.tsx) mkdir -p .claude; { echo \"[$(date +%Y-%m-%d_%H:%M:%S)] typecheck after $f\"; npx tsc --noEmit 2>&1; echo \"[exit: $?]\"; echo ''; } >> .claude/typecheck.log ;; esac",
+            "async": true,
+            "timeout": 90,
+            "statusMessage": "Typecheck (background)"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "mkdir -p .claude; if jq -e '.scripts.lint' package.json > /dev/null 2>&1; then if ! npm run lint > .claude/lint.log 2>&1; then jq -nc '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"Lint selhal — oprav chyby a zkus znovu. Detaily v .claude/lint.log\"}}'; exit 0; fi; fi; if ! npx tsc --noEmit > .claude/tsc-precommit.log 2>&1; then jq -nc '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"Typecheck selhal — oprav typové chyby a zkus znovu. Detaily v .claude/tsc-precommit.log\"}}'; exit 0; fi",
+            "timeout": 180,
+            "statusMessage": "Pre-commit gate (lint + typecheck)"
+          }
+        ]
+      }
+    ]
+  }
+}
