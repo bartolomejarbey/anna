@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sidebar } from '@/components/layout/sidebar';
 import { Topbar } from '@/components/layout/topbar';
-import { AiAsistentRail } from '@/components/layout/ai-asistent-rail';
+import { CommandPalette } from '@/components/command-palette';
+import { AssistantModal } from '@/components/assistant-modal';
+import { AssistantProvider } from '@/components/launchpad/assistant-context';
 
 interface Advisor {
   id: string;
@@ -13,37 +14,54 @@ interface Advisor {
   role: 'advisor' | 'tenant_admin' | 'super_admin';
 }
 
+interface Customer {
+  id: string;
+  full_name: string;
+}
+
+interface RecentMeeting {
+  id: string;
+  created_at: string;
+  customer_name: string | null;
+}
+
 interface AdvisorShellProps {
   advisor: Advisor;
+  customers: Customer[];
+  recentMeetings: RecentMeeting[];
   children: React.ReactNode;
 }
 
-export function AdvisorShell({ advisor, children }: AdvisorShellProps) {
-  const [assistantOpen, setAssistantOpen] = useState(false);
+export function AdvisorShell({ advisor, customers, recentMeetings, children }: AdvisorShellProps) {
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setAssistantOpen((v) => !v);
+        setPaletteOpen((v) => !v);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const showAdmin = advisor.role === 'super_admin' || advisor.role === 'tenant_admin';
+
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-canvas">
-      <div className="hidden lg:flex h-full shrink-0">
-        <Sidebar />
+    <AssistantProvider>
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-canvas">
+        <Topbar advisor={advisor} onOpenPalette={() => setPaletteOpen(true)} />
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
-
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Topbar advisor={advisor} onOpenAssistant={() => setAssistantOpen(true)} />
-        <div className="flex-1 overflow-y-auto">{children}</div>
-      </div>
-
-      <AiAsistentRail open={assistantOpen} onClose={() => setAssistantOpen(false)} />
-    </div>
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        customers={customers}
+        recentMeetings={recentMeetings}
+        showAdmin={showAdmin}
+      />
+      <AssistantModal />
+    </AssistantProvider>
   );
 }

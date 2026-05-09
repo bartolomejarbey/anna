@@ -191,103 +191,136 @@ Mono:                   14px / 'JetBrains Mono' (jen pro code, transcripts, metr
 ### 5.3 BARVY (explicitní hex, žádné popisy)
 
 ```css
-/* Background — vrstvená béžová */
---bg-canvas:        #FAF7F2;  /* hlavní pozadí, warm cream */
+/* Background — vrstvená cream */
+--bg-canvas:        #FAF6F0;  /* hlavní pozadí, warm cream */
 --bg-surface:       #FFFFFF;  /* cards, modals — pure white pro kontrast */
---bg-subtle:        #F4F0E9;  /* hover states, secondary surfaces */
---bg-inset:         #EDE7DB;  /* nested surfaces, code blocks */
+--bg-subtle:        #F2EBE0;  /* hover states, secondary surfaces */
+--bg-inset:         #E8DFCF;  /* nested surfaces, code blocks */
 
 /* Borders */
---border-subtle:    #E8E0D5;  /* default border — ledva viditelná */
---border-default:   #D6CDBE;  /* normal border */
---border-strong:    #1D1D1F;  /* emphasized border (focus, active) */
+--border-subtle:    #E5DCC9;  /* default border */
+--border-default:   #C9BCA1;  /* normal border */
+--border-strong:    #1A1A1A;  /* emphasized border (focus, active) */
 
 /* Text */
---text-primary:     #1D1D1F;  /* primary content */
---text-secondary:   #5C5A56;  /* secondary content */
---text-tertiary:    #8B8780;  /* metadata, timestamps */
---text-disabled:    #B5B0A6;
+--text-primary:     #1A1A1A;
+--text-secondary:   #5A5045;
+--text-tertiary:    #8C8276;
+--text-disabled:    #B5AB99;
 
-/* Accent — single, ne purple, ne blue */
---accent:           #1D1D1F;  /* primary actions = skoro černá, ne modrá */
---accent-hover:     #000000;
---accent-text:      #FAF7F2;  /* text na accent backgrounds */
+/* Accent — wine, jediný akcent v UI */
+--accent:           #6B1F2E;
+--accent-hover:     #561620;
+--accent-muted:     rgba(107,31,46,0.10);  /* featured tool cards, badge backgrounds */
+--accent-text:      #FAF6F0;
 
-/* Functional (subtle, finanční) */
---success:          #1F4F3F;  /* tmavá lesní zelená */
---warning:          #8B6914;  /* tmavé gold */
---error:            #6B1818;  /* tmavé burgundy */
+/* Functional */
+--success:          #2F5237;
+--warning:          #8C6914;
+--error:            #6B1F2E;  /* sdílí wine s accent — finanční serioznost, ne agresivní červená */
 
-/* Functional backgrounds (10% opacity verze) */
---success-bg:       #1F4F3F1A;
---warning-bg:       #8B69141A;
---error-bg:         #6B18181A;
+/* Functional backgrounds (10% alpha) */
+--success-bg:       rgba(47,82,55,0.10);
+--warning-bg:       rgba(140,105,20,0.10);
+--error-bg:         rgba(107,31,46,0.10);
 ```
 
 **Pravidla:**
-- ŽÁDNÝ accent v UI ostatně než `--accent` (skoro černá).
-- Functional barvy JEN na status indicators a inline alerts. Nikdy buttons, nikdy nadpisy.
-- Background hierarchie přes 4 vrstvy béžové (canvas → surface → subtle → inset). To je hierarchie, ne shadow.
-- ŽÁDNÉ shadows. Hierarchie přes background contrast, ne stíny.
+- Wine `--accent` je JEDINÝ akcent v UI. Žádný druhý.
+- `--accent-muted` jen pro: featured tool-card pozadí, "Q* 2026" badge backgrounds. Ne hover (hover = border darkening).
+- Background hierarchie přes 4 vrstvy cream (canvas → surface → subtle → inset). To je hierarchie, ne shadow.
+- ŽÁDNÉ shadows. Hierarchie přes background contrast a border, ne stíny.
 
-### 5.4 LAYOUT
+### 5.4 LAYOUT — LAUNCHPAD ARCHITEKTURA
+
+**Anti-pattern:** sidebar | main | rail dashboard. Nikdy.
+
+**Pattern:** topbar (slim) + main (full-width, scrollable). Žádný sidebar. Navigace přes home launchpad + ⌘K command palette.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ Anna  /  Schůzky                          ⌘K  Karel ▾    │ ← 64px topbar, border-b
+├──────────────────────────────────────────────────────────┤
+│                                                            │
+│         <main, max-width 1280px, scrollable>              │
+│                                                            │
+└──────────────────────────────────────────────────────────┘
+
+⌘K          → Command palette modal (640px, centered)
+Asistent    → Modal (640×640, centered) — NE rail
+```
 
 **Grid systém:**
 - Base unit: 4px
 - Spacing scale: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128
 - ŽÁDNÉ vlastní pixel hodnoty mimo scale.
-- Vertical rhythm mezi sekcemi: 64-96px, ne uniform.
+- Vertical rhythm mezi sekcemi na home: 96px.
 
-**Page structure:**
-```
-┌─────────────────────────────────────────────────┐
-│  Topbar (56px height, subtle border bottom)     │
-├──────────┬──────────────────────────────────────┤
-│          │                                       │
-│ Sidebar  │  Main content                         │
-│ (240px)  │  (max-width 960px, NOT centered)     │
-│          │  (left-aligned, organic spacing)      │
-│          │                                       │
-└──────────┴──────────────────────────────────────┘
+**Topbar (64px height):**
+- Bg-canvas (splývá s mainem, jen border-b odděluje)
+- Vlevo: "Anna" text logo (h3 size, font-medium, link na `/dashboard`) + breadcrumb (jen mimo home — `/` separator + page title v text-secondary)
+- Vpravo: ⌘K trigger ("Hledat" + kbd) → otvírá **palette** (NE asistenta) + advisor dropdown (text + caret, žádný kruh s iniciálami)
 
-AI rail: HIDDEN by default. Trigger: ⌘K or button.
-When open: slide-in from right, max-width 380px, overlay-style.
-```
+**Home launchpad (`/dashboard`):**
+- 4 sekce, vertical rhythm 96px:
+  1. **Hero greeting** — display 56px tracking-tight, time-based ("Dobré ráno, Karle")
+  2. **Tvoje aktivita** — 3 stat cards (poslední schůzka, týden, posl. nabídka)
+  3. **Tvoje nástroje** — launchpad grid 3 sloupce (Naslouchač featured, pak ostatní)
+  4. **Brzy dostupné** — launchpad grid 3 sloupce, disabled + Q* badge
 
-**Sidebar pravidla:**
-- ŽÁDNÉ ikonky u menu items (kromě bottom-section utility icons jako logout)
-- Aktivní stav: subtle 2px vertical bar vlevo + font-weight 500 (ne background change)
-- Section labels: caption typography (uppercase 12px tracking-wide)
-- Hover: bg-subtle, žádný transition delay
-- Logo top-left: jen text "Anna" v display-weight 500, žádné ikony
+**Tool card (launchpad):**
+- Full-grid sloupec (~360px), výška ~200px
+- Padding 28px, border-radius 16px, border 1px subtle
+- Hover: border accent + translate-y(-1px), 180ms ease-out-quart
+- **Custom SVG ikona 48px** wine accent, vlevo nahoře (NE Lucide, NE Heroicons, NE Phosphor v tool-card pozici)
+- Title 20px (h3) font-medium tracking-tight
+- Description 14px (body-sm) text-secondary, 2 lines max
+- **Featured** varianta: bg-accent-muted (wine wash, ne hover state)
+- **Disabled** varianta: opacity 0.5, ikona text-tertiary, badge "Q* 2026" top-right (bg-accent-muted, text-accent, 11px tracking-wide)
 
-**Topbar pravidla:**
-- Žádný search bar (uživatel zítra search nepoužije)
-- Vlevo: page title (H2 typography)
-- Vpravo: jen advisor dropdown — text "Karel Novák" + chevron, žádný kruh s iniciálami
-- Border-bottom subtle, ne shadow
+**Activity card (stat):**
+- bg-surface, border-subtle, padding 24px, radius 12px
+- Title 12px caption uppercase tracking-wide text-tertiary
+- Value `.text-stat` (32px font-medium tracking-tight) NEBO h3 (20px) pro jméno
+- Subtitle pod value: 13px text-secondary
+- Hover border-default (jen pokud clickable)
 
-**Cards:**
+**Command palette (⌘K):**
+- Otvírá ⌘K. Toggle (druhý ⌘K zavírá).
+- Max-width 640px, vertically centered, overlay bg-black/15
+- bg-surface, radius 16px, border-default, fade-scale-in 180ms
+- Search input 56px, padding 0 24px, font-size 18px, placeholder "Co hledáš?", border-b subtle
+- Results 480px max-height, scrollable
+- Result item 44px, padding 0 24px, hover bg-subtle
+- Sekce (cmdk groups): Nástroje, Zákazníci, Schůzky, AI Asistent
+- "Zeptej se Anny" item: zavře palette + otevře asistenta s prefilled query
+
+**Asistent modal:**
+- Otvírá: home tool card "Asistent" NEBO "Zeptej se Anny" v palette
+- NIKDY ⌘K (⌘K je palette)
+- Centered, 640×640, bg-surface, radius 16px, border-default
+- ESC nebo close ikona zavírá
+- Wraps existující `AiAsistentChat` komponentu
+
+**Cards (obecné):**
 - Border 1px `--border-subtle`, ne shadow
-- Padding 24px (ne 32px default)
-- Border-radius 12px (ne 16px+)
-- Background `--bg-surface` (white) na canvas (béžovém)
-- Hover state: `--border-default` (subtle border darkening), žádný lift
+- Padding 24px (default) / 28px (tool card)
+- Border-radius 12px (default) / 16px (tool card, modal, palette)
+- Background `--bg-surface` (white) na canvas (cream)
+- Hover state: `--border-default`
 
 **Buttons:**
-- Primary: bg `--accent`, text `--accent-text`, height 40px, border-radius 8px, padding 0 16px, font-weight 500
+- Primary: bg `--accent` (wine), text `--accent-text`, height 40px, radius 8px, padding 0 16px, font-weight 500
 - Secondary: border 1px `--border-default`, bg transparent, text `--text-primary`
 - Ghost: text only, bg transparent, hover bg-subtle
 - Žádné rounded-full, ne rounded-xl
 - Active state: scale-[0.98]
-- Hover: opacity 0.9 nebo bg darkening, žádný lift
 
 **Inputs:**
 - Border 1px `--border-default`, bg `--bg-surface`
 - Height 40px, padding 0 12px
 - Border-radius 8px
-- Focus: border `--accent` (2px ring SUBTLE, ne neon)
-- Žádný shadow
+- Focus: border `--accent` (wine, 2px subtle ring)
 
 ### 5.5 IKONY
 

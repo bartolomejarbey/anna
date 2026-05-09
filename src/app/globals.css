@@ -1,56 +1,58 @@
-@import "tailwindcss";
 @import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&f[]=jetbrains-mono@400,500&display=swap');
+@import "tailwindcss";
 
 @theme {
-  /* Backgrounds — vrstvená béžová */
-  --color-canvas: #faf7f2;
+  /* Backgrounds — vrstvená cream */
+  --color-canvas: #faf6f0;
   --color-surface: #ffffff;
-  --color-subtle: #f4f0e9;
-  --color-inset: #ede7db;
+  --color-subtle: #f2ebe0;
+  --color-inset: #e8dfcf;
 
   /* Borders */
-  --color-border-subtle: #e8e0d5;
-  --color-border-default: #d6cdbe;
-  --color-border-strong: #1d1d1f;
+  --color-border-subtle: #e5dcc9;
+  --color-border-default: #c9bca1;
+  --color-border-strong: #1a1a1a;
 
   /* Text */
-  --color-text-primary: #1d1d1f;
-  --color-text-secondary: #5c5a56;
-  --color-text-tertiary: #8b8780;
-  --color-text-disabled: #b5b0a6;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #5a5045;
+  --color-text-tertiary: #8c8276;
+  --color-text-disabled: #b5ab99;
 
-  /* Accent — single, skoro černá */
-  --color-accent: #1d1d1f;
-  --color-accent-hover: #000000;
-  --color-accent-text: #faf7f2;
+  /* Accent — wine, jediný akcent v UI */
+  --color-accent: #6b1f2e;
+  --color-accent-hover: #561620;
+  --color-accent-muted: rgba(107, 31, 46, 0.1);
+  --color-accent-text: #faf6f0;
 
-  /* Functional (subtle, finanční) */
-  --color-success: #1f4f3f;
-  --color-warning: #8b6914;
-  --color-error: #6b1818;
+  /* Functional */
+  --color-success: #2f5237;
+  --color-warning: #8c6914;
+  --color-error: #6b1f2e;
 
   /* Functional backgrounds — 10 % alpha */
-  --color-success-bg: rgba(31, 79, 63, 0.1);
-  --color-warning-bg: rgba(139, 105, 20, 0.1);
-  --color-error-bg: rgba(107, 24, 24, 0.1);
+  --color-success-bg: rgba(47, 82, 55, 0.1);
+  --color-warning-bg: rgba(140, 105, 20, 0.1);
+  --color-error-bg: rgba(107, 31, 46, 0.1);
 
   /* Fonts */
   --font-sans: 'General Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Radius — žádné rounded-full / rounded-xl bez rozmyslu */
+  /* Radius */
   --radius-input: 8px;
   --radius-button: 8px;
   --radius-card: 12px;
+  --radius-tool: 16px;
 
-  --container-content: 960px;
+  --container-content: 1280px;
 }
 
 @utility text-display {
-  font-size: 52px;
+  font-size: 56px;
   line-height: 1.05;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 @utility text-h1 {
@@ -68,10 +70,10 @@
 }
 
 @utility text-h3 {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.3;
   font-weight: 500;
-  letter-spacing: 0;
+  letter-spacing: -0.005em;
 }
 
 @utility text-body-lg {
@@ -99,8 +101,16 @@
   font-size: 12px;
   line-height: 1.3;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+@utility text-stat {
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
 }
 
 @utility text-mono {
@@ -115,14 +125,15 @@ body {
   background-color: var(--color-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'ss02';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: var(--color-text-primary);
-  color: var(--color-canvas);
+  background: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 @keyframes anna-pulse {
@@ -146,6 +157,15 @@ body {
   to   { transform: translateX(100%); opacity: 0; }
 }
 
+@keyframes anna-fade-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+.anna-fade-scale-in {
+  animation: anna-fade-scale-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @keyframes anna-recording-pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.85; }
@@ -153,4 +173,60 @@ body {
 
 .anna-recording-pulse {
   animation: anna-recording-pulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* Command palette (cmdk) */
+.cmdk-palette [cmdk-input] {
+  width: 100%;
+  height: 56px;
+  padding: 0 24px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 18px;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.cmdk-palette [cmdk-input]::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.cmdk-palette [cmdk-list] {
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 8px;
+  scroll-padding-block: 8px;
+}
+
+.cmdk-palette [cmdk-group-heading] {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  padding: 12px 16px 6px;
+}
+
+.cmdk-palette [cmdk-item] {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+.cmdk-palette [cmdk-item][data-selected="true"] {
+  background: var(--color-subtle);
+}
+
+.cmdk-palette [cmdk-empty] {
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
 }
