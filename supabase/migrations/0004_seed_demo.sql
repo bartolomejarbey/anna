@@ -1,0 +1,25 @@
+-- =============================================================================
+-- Anna — seed location notice (NOT a migration).
+--
+-- Demo seed data lives at:    supabase/seed.sql
+-- (NOT here in supabase/migrations/.)
+--
+-- Why: supabase/config.toml has [db.seed] sql_paths = ["./seed.sql"], which
+-- means `supabase db reset` automatically runs supabase/seed.sql AFTER
+-- migrations finish. Putting the seed in migrations/ would re-run it on
+-- every `supabase db push` to a remote (including production), which is the
+-- opposite of what we want — production must never have demo customers.
+--
+-- This file is intentionally empty (only comments). It exists so the
+-- migration history reads sequentially: 0001 schema, 0002 helpers, 0003 RLS,
+-- 0004 = "seed handled separately, see supabase/seed.sql". A future migration
+-- can safely use number 0005 onwards.
+--
+-- TO RE-SEED LOCALLY:
+--     supabase db reset
+-- TO APPLY MIGRATIONS WITHOUT SEED (production-style):
+--     supabase db push
+-- =============================================================================
+
+-- (no statements)
+select 1 where false;
