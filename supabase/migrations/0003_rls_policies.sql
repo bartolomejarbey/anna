@@ -21,7 +21,7 @@
 --   * Tables without direct advisor_id (transcripts, extractions, calculations,
 --     assistant_messages) authorize through their parent FK via EXISTS.
 --   * NEW.tenant_id consistency on INSERT/UPDATE is enforced via WITH CHECK
---     against auth.tenant_id() so an advisor can't post into another tenant.
+--     against public.tenant_id() so an advisor can't post into another tenant.
 -- =============================================================================
 
 -- =============================================================================
@@ -69,21 +69,21 @@ drop policy if exists "tenants_advisor_select_own"     on public.tenants;
 
 create policy "tenants_super_admin_all"
   on public.tenants for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "tenants_tenant_admin_select"
   on public.tenants for select to authenticated
-  using (auth.is_tenant_admin() and id = auth.tenant_id());
+  using (public.is_tenant_admin() and id = public.tenant_id());
 
 create policy "tenants_tenant_admin_update"
   on public.tenants for update to authenticated
-  using (auth.is_tenant_admin() and id = auth.tenant_id())
-  with check (auth.is_tenant_admin() and id = auth.tenant_id());
+  using (public.is_tenant_admin() and id = public.tenant_id())
+  with check (public.is_tenant_admin() and id = public.tenant_id());
 
 create policy "tenants_advisor_select_own"
   on public.tenants for select to authenticated
-  using (id = auth.tenant_id());
+  using (id = public.tenant_id());
 
 -- =============================================================================
 -- 2. advisors
@@ -100,26 +100,26 @@ drop policy if exists "advisors_self_update"           on public.advisors;
 
 create policy "advisors_super_admin_all"
   on public.advisors for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "advisors_tenant_admin_all"
   on public.advisors for all to authenticated
-  using (auth.is_tenant_admin() and tenant_id = auth.tenant_id())
-  with check (auth.is_tenant_admin() and tenant_id = auth.tenant_id());
+  using (public.is_tenant_admin() and tenant_id = public.tenant_id())
+  with check (public.is_tenant_admin() and tenant_id = public.tenant_id());
 
 create policy "advisors_self_select"
   on public.advisors for select to authenticated
-  using (id = auth.advisor_id());
+  using (id = public.advisor_id());
 
 create policy "advisors_self_update"
   on public.advisors for update to authenticated
-  using (id = auth.advisor_id())
+  using (id = public.advisor_id())
   -- prevent advisor from escalating role or jumping tenant
   with check (
-    id = auth.advisor_id()
-    and tenant_id = auth.tenant_id()
-    and role = auth.advisor_role()::public.advisor_role
+    id = public.advisor_id()
+    and tenant_id = public.tenant_id()
+    and role = public.advisor_role()::public.advisor_role
   );
 
 -- =============================================================================
@@ -135,20 +135,20 @@ drop policy if exists "customers_advisor_all"       on public.customers;
 
 create policy "customers_super_admin_all"
   on public.customers for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "customers_tenant_admin_all"
   on public.customers for all to authenticated
-  using (auth.is_tenant_admin() and tenant_id = auth.tenant_id())
-  with check (auth.is_tenant_admin() and tenant_id = auth.tenant_id());
+  using (public.is_tenant_admin() and tenant_id = public.tenant_id())
+  with check (public.is_tenant_admin() and tenant_id = public.tenant_id());
 
 create policy "customers_advisor_all"
   on public.customers for all to authenticated
-  using (advisor_id = auth.advisor_id())
+  using (advisor_id = public.advisor_id())
   with check (
-    advisor_id = auth.advisor_id()
-    and tenant_id = auth.tenant_id()
+    advisor_id = public.advisor_id()
+    and tenant_id = public.tenant_id()
   );
 
 -- =============================================================================
@@ -161,20 +161,20 @@ drop policy if exists "meetings_advisor_all"       on public.meetings;
 
 create policy "meetings_super_admin_all"
   on public.meetings for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "meetings_tenant_admin_all"
   on public.meetings for all to authenticated
-  using (auth.is_tenant_admin() and tenant_id = auth.tenant_id())
-  with check (auth.is_tenant_admin() and tenant_id = auth.tenant_id());
+  using (public.is_tenant_admin() and tenant_id = public.tenant_id())
+  with check (public.is_tenant_admin() and tenant_id = public.tenant_id());
 
 create policy "meetings_advisor_all"
   on public.meetings for all to authenticated
-  using (advisor_id = auth.advisor_id())
+  using (advisor_id = public.advisor_id())
   with check (
-    advisor_id = auth.advisor_id()
-    and tenant_id = auth.tenant_id()
+    advisor_id = public.advisor_id()
+    and tenant_id = public.tenant_id()
   );
 
 -- =============================================================================
@@ -187,23 +187,23 @@ drop policy if exists "transcripts_advisor_all"       on public.transcripts;
 
 create policy "transcripts_super_admin_all"
   on public.transcripts for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "transcripts_tenant_admin_all"
   on public.transcripts for all to authenticated
   using (
-    auth.is_tenant_admin() and exists (
+    public.is_tenant_admin() and exists (
       select 1 from public.meetings m
       where m.id = transcripts.meeting_id
-        and m.tenant_id = auth.tenant_id()
+        and m.tenant_id = public.tenant_id()
     )
   )
   with check (
-    auth.is_tenant_admin() and exists (
+    public.is_tenant_admin() and exists (
       select 1 from public.meetings m
       where m.id = transcripts.meeting_id
-        and m.tenant_id = auth.tenant_id()
+        and m.tenant_id = public.tenant_id()
     )
   );
 
@@ -213,14 +213,14 @@ create policy "transcripts_advisor_all"
     exists (
       select 1 from public.meetings m
       where m.id = transcripts.meeting_id
-        and m.advisor_id = auth.advisor_id()
+        and m.advisor_id = public.advisor_id()
     )
   )
   with check (
     exists (
       select 1 from public.meetings m
       where m.id = transcripts.meeting_id
-        and m.advisor_id = auth.advisor_id()
+        and m.advisor_id = public.advisor_id()
     )
   );
 
@@ -234,23 +234,23 @@ drop policy if exists "extractions_advisor_all"       on public.extractions;
 
 create policy "extractions_super_admin_all"
   on public.extractions for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "extractions_tenant_admin_all"
   on public.extractions for all to authenticated
   using (
-    auth.is_tenant_admin() and exists (
+    public.is_tenant_admin() and exists (
       select 1 from public.meetings m
       where m.id = extractions.meeting_id
-        and m.tenant_id = auth.tenant_id()
+        and m.tenant_id = public.tenant_id()
     )
   )
   with check (
-    auth.is_tenant_admin() and exists (
+    public.is_tenant_admin() and exists (
       select 1 from public.meetings m
       where m.id = extractions.meeting_id
-        and m.tenant_id = auth.tenant_id()
+        and m.tenant_id = public.tenant_id()
     )
   );
 
@@ -260,14 +260,14 @@ create policy "extractions_advisor_all"
     exists (
       select 1 from public.meetings m
       where m.id = extractions.meeting_id
-        and m.advisor_id = auth.advisor_id()
+        and m.advisor_id = public.advisor_id()
     )
   )
   with check (
     exists (
       select 1 from public.meetings m
       where m.id = extractions.meeting_id
-        and m.advisor_id = auth.advisor_id()
+        and m.advisor_id = public.advisor_id()
     )
   );
 
@@ -281,23 +281,23 @@ drop policy if exists "calculations_advisor_all"       on public.calculations;
 
 create policy "calculations_super_admin_all"
   on public.calculations for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "calculations_tenant_admin_all"
   on public.calculations for all to authenticated
   using (
-    auth.is_tenant_admin() and exists (
+    public.is_tenant_admin() and exists (
       select 1 from public.meetings m
       where m.id = calculations.meeting_id
-        and m.tenant_id = auth.tenant_id()
+        and m.tenant_id = public.tenant_id()
     )
   )
   with check (
-    auth.is_tenant_admin() and exists (
+    public.is_tenant_admin() and exists (
       select 1 from public.meetings m
       where m.id = calculations.meeting_id
-        and m.tenant_id = auth.tenant_id()
+        and m.tenant_id = public.tenant_id()
     )
   );
 
@@ -307,14 +307,14 @@ create policy "calculations_advisor_all"
     exists (
       select 1 from public.meetings m
       where m.id = calculations.meeting_id
-        and m.advisor_id = auth.advisor_id()
+        and m.advisor_id = public.advisor_id()
     )
   )
   with check (
     exists (
       select 1 from public.meetings m
       where m.id = calculations.meeting_id
-        and m.advisor_id = auth.advisor_id()
+        and m.advisor_id = public.advisor_id()
     )
   );
 
@@ -328,20 +328,20 @@ drop policy if exists "offers_advisor_all"       on public.offers;
 
 create policy "offers_super_admin_all"
   on public.offers for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "offers_tenant_admin_all"
   on public.offers for all to authenticated
-  using (auth.is_tenant_admin() and tenant_id = auth.tenant_id())
-  with check (auth.is_tenant_admin() and tenant_id = auth.tenant_id());
+  using (public.is_tenant_admin() and tenant_id = public.tenant_id())
+  with check (public.is_tenant_admin() and tenant_id = public.tenant_id());
 
 create policy "offers_advisor_all"
   on public.offers for all to authenticated
-  using (advisor_id = auth.advisor_id())
+  using (advisor_id = public.advisor_id())
   with check (
-    advisor_id = auth.advisor_id()
-    and tenant_id = auth.tenant_id()
+    advisor_id = public.advisor_id()
+    and tenant_id = public.tenant_id()
   );
 
 -- =============================================================================
@@ -360,19 +360,19 @@ drop policy if exists "analytics_events_advisor_insert"       on public.analytic
 
 create policy "analytics_events_super_admin_select"
   on public.analytics_events for select to authenticated
-  using (auth.is_super_admin());
+  using (public.is_super_admin());
 
 -- super_admin can also insert/update/delete (e.g. backfills, GDPR deletions)
 create policy "analytics_events_super_admin_modify"
   on public.analytics_events for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "analytics_events_advisor_insert"
   on public.analytics_events for insert to authenticated
   with check (
-    advisor_id = auth.advisor_id()
-    and (tenant_id is null or tenant_id = auth.tenant_id())
+    advisor_id = public.advisor_id()
+    and (tenant_id is null or tenant_id = public.tenant_id())
   );
 
 -- =============================================================================
@@ -387,15 +387,15 @@ drop policy if exists "assistant_threads_advisor_all"      on public.assistant_t
 
 create policy "assistant_threads_super_admin_all"
   on public.assistant_threads for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "assistant_threads_advisor_all"
   on public.assistant_threads for all to authenticated
-  using (advisor_id = auth.advisor_id())
+  using (advisor_id = public.advisor_id())
   with check (
-    advisor_id = auth.advisor_id()
-    and tenant_id = auth.tenant_id()
+    advisor_id = public.advisor_id()
+    and tenant_id = public.tenant_id()
   );
 
 -- =============================================================================
@@ -407,8 +407,8 @@ drop policy if exists "assistant_messages_advisor_all"      on public.assistant_
 
 create policy "assistant_messages_super_admin_all"
   on public.assistant_messages for all to authenticated
-  using (auth.is_super_admin())
-  with check (auth.is_super_admin());
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create policy "assistant_messages_advisor_all"
   on public.assistant_messages for all to authenticated
@@ -416,14 +416,14 @@ create policy "assistant_messages_advisor_all"
     exists (
       select 1 from public.assistant_threads t
       where t.id = assistant_messages.thread_id
-        and t.advisor_id = auth.advisor_id()
+        and t.advisor_id = public.advisor_id()
     )
   )
   with check (
     exists (
       select 1 from public.assistant_threads t
       where t.id = assistant_messages.thread_id
-        and t.advisor_id = auth.advisor_id()
+        and t.advisor_id = public.advisor_id()
     )
   );
 

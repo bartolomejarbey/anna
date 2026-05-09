@@ -6,6 +6,7 @@ const DEMO_ADVISORS = [
   { id: 'ad0000000003', name: 'Tomáš Dvořák', email: 'tomas.dvorak@4fin.cz', role: 'Poradce' },
   { id: 'ad0000000004', name: 'Eva Černá', email: 'eva.cerna@4fin.cz', role: 'Senior poradkyně' },
   { id: 'ad0000000005', name: 'Martin Procházka', email: 'martin.prochazka@4fin.cz', role: 'Poradce' },
+  { id: 'ad0000000099', name: 'Bartoloměj Rota', email: 'bartolomej@arbey.cz', role: 'Super admin' },
 ] as const;
 
 function initials(name: string): string {

@@ -1,24 +1,24 @@
 -- =============================================================================
--- Anna — helper functions in `auth` schema for use in RLS policies.
+-- Anna — helper functions in `public` schema for use in RLS policies.
 --
--- All functions:
---   * LANGUAGE sql           — single SELECT, planner-friendly
---   * STABLE                 — same input → same output within a tx
---   * SECURITY DEFINER       — execute with owner privileges so they can read
---                              public.advisors even when the calling role can't
---   * SET search_path = ''   — schema-qualify every reference; prevents
---                              search_path injection (Supabase advisor: 0011)
---   * GRANT EXECUTE TO authenticated, anon, service_role
+-- Originally these lived in the `auth` schema, but Supabase reserves that
+-- schema for built-ins and `db push` cannot create functions there. The
+-- `public` schema works equivalently because:
+--   * the functions are SECURITY DEFINER (run as their owner — typically
+--     `postgres`, which has BYPASSRLS) so `force row level security` on
+--     public.advisors does not block them;
+--   * `set search_path = ''` plus fully-qualified references (public.advisors,
+--     auth.uid()) prevents search_path injection regardless of schema.
 --
--- Naming: NOT auth.role() — Supabase already ships an auth.role() that returns
--- the JWT role claim ('anon', 'authenticated', 'service_role'). Name collision
--- = mystery bug. We use auth.advisor_role() instead.
+-- Naming: NOT public.role() — `auth.role()` is the built-in JWT role claim
+-- ('anon' / 'authenticated' / 'service_role'). We use public.advisor_role()
+-- so there is no collision.
 -- =============================================================================
 
--- ---------- auth.advisor_id() ----------
+-- ---------- public.advisor_id() ----------
 -- public.advisors.id of the currently authenticated advisor (or NULL if the
 -- caller is anon / has no matching advisor row).
-create or replace function auth.advisor_id()
+create or replace function public.advisor_id()
 returns uuid
 language sql
 stable
@@ -31,9 +31,9 @@ as $$
   limit 1
 $$;
 
--- ---------- auth.tenant_id() ----------
+-- ---------- public.tenant_id() ----------
 -- tenant_id of the currently authenticated advisor (or NULL).
-create or replace function auth.tenant_id()
+create or replace function public.tenant_id()
 returns uuid
 language sql
 stable
@@ -46,11 +46,11 @@ as $$
   limit 1
 $$;
 
--- ---------- auth.advisor_role() ----------
+-- ---------- public.advisor_role() ----------
 -- 'advisor' | 'tenant_admin' | 'super_admin' | NULL
 -- Returned as text so it can be compared in policies without exposing the
 -- enum type via PostgREST.
-create or replace function auth.advisor_role()
+create or replace function public.advisor_role()
 returns text
 language sql
 stable
@@ -63,8 +63,8 @@ as $$
   limit 1
 $$;
 
--- ---------- auth.is_super_admin() ----------
-create or replace function auth.is_super_admin()
+-- ---------- public.is_super_admin() ----------
+create or replace function public.is_super_admin()
 returns boolean
 language sql
 stable
@@ -80,11 +80,11 @@ as $$
   )
 $$;
 
--- ---------- auth.is_tenant_admin() ----------
+-- ---------- public.is_tenant_admin() ----------
 -- Tenant admin within their own tenant. Note: this returns true ONLY for the
 -- tenant_admin role; super_admins are checked separately. Each policy that
 -- wants "admin or above" needs `is_tenant_admin() OR is_super_admin()`.
-create or replace function auth.is_tenant_admin()
+create or replace function public.is_tenant_admin()
 returns boolean
 language sql
 stable
@@ -102,8 +102,8 @@ $$;
 
 -- ---------- Grants ----------
 -- Helper fns must be callable by the auth roles that hit RLS.
-grant execute on function auth.advisor_id()       to anon, authenticated, service_role;
-grant execute on function auth.tenant_id()        to anon, authenticated, service_role;
-grant execute on function auth.advisor_role()     to anon, authenticated, service_role;
-grant execute on function auth.is_super_admin()   to anon, authenticated, service_role;
-grant execute on function auth.is_tenant_admin()  to anon, authenticated, service_role;
+grant execute on function public.advisor_id()       to anon, authenticated, service_role;
+grant execute on function public.tenant_id()        to anon, authenticated, service_role;
+grant execute on function public.advisor_role()     to anon, authenticated, service_role;
+grant execute on function public.is_super_admin()   to anon, authenticated, service_role;
+grant execute on function public.is_tenant_admin()  to anon, authenticated, service_role;

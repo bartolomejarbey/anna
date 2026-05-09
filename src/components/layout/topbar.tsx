@@ -6,7 +6,7 @@ interface Advisor {
   full_name: string;
   email: string;
   avatar_url: string | null;
-  role: 'advisor';
+  role: 'advisor' | 'tenant_admin' | 'super_admin';
 }
 
 interface TopbarProps {

@@ -1,6 +1,13 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { currentAdvisor } from '@/lib/auth';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const advisor = await currentAdvisor();
+  if (!advisor || advisor.role !== 'super_admin') {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="min-h-screen bg-bg-secondary">
       <header className="border-b border-border-subtle bg-bg-primary">

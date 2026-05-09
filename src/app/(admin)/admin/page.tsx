@@ -53,6 +53,10 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   'calculation.completed': 'Spočítán plán',
   'pdf.generated': 'Vytvořeno PDF',
   'pipeline.failed': 'Pipeline selhal',
+  meeting_started: 'Zahájena schůzka',
+  extraction_completed: 'Vytažena data',
+  offer_signed: 'Podepsána nabídka',
+  pdf_generated: 'Vytvořeno PDF',
 };
 
 function labelForEventType(eventType: string): string {
