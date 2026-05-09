@@ -2,7 +2,7 @@
 
 import path from 'path';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { MOCK_ADVISOR_ID, MOCK_TENANT_ID } from '@/lib/auth';
+import { currentAdvisorId, MOCK_TENANT_ID } from '@/lib/auth';
 import { logEvent } from '@/lib/analytics/events';
 import { transcribeAudio } from '@/lib/openai/whisper';
 import { reconcileTranscripts } from '@/lib/openai/reconcile';
@@ -61,13 +61,14 @@ export async function createMeeting(input: {
   customerId: string;
   captureMethod: 'browser_live' | 'file_upload';
 }): Promise<{ meetingId: string }> {
+  const advisorId = await currentAdvisorId();
   const admin = supabaseAdmin();
 
   const { data, error } = await admin
     .from('meetings')
     .insert({
       tenant_id: MOCK_TENANT_ID,
-      advisor_id: MOCK_ADVISOR_ID,
+      advisor_id: advisorId,
       customer_id: input.customerId,
       status: 'idle',
       capture_method: input.captureMethod,
@@ -82,7 +83,7 @@ export async function createMeeting(input: {
   await logEvent({
     type: 'meeting.created',
     data: { meeting_id: data.id, capture_method: input.captureMethod },
-    advisorId: MOCK_ADVISOR_ID,
+    advisorId,
     tenantId: MOCK_TENANT_ID,
   });
 
@@ -104,8 +105,11 @@ export async function uploadAudioForm(formData: FormData): Promise<void> {
     throw new Error('uploadAudioForm: chybí audio soubor');
   }
 
+  const advisorId = await currentAdvisorId();
+  await assertMeetingOwnership(meetingId, advisorId);
+
   const ext = extFromMimeType(mimeType);
-  const storagePath = `${MOCK_ADVISOR_ID}/${meetingId}.${ext}`;
+  const storagePath = `${advisorId}/${meetingId}.${ext}`;
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
@@ -131,9 +135,23 @@ export async function uploadAudioForm(formData: FormData): Promise<void> {
   await logEvent({
     type: 'audio.uploaded',
     data: { meeting_id: meetingId, storage_path: storagePath },
-    advisorId: MOCK_ADVISOR_ID,
+    advisorId,
     tenantId: MOCK_TENANT_ID,
   });
+}
+
+// ─── ownership guard ──────────────────────────────────────────────────────────
+
+async function assertMeetingOwnership(meetingId: string, advisorId: string): Promise<void> {
+  const { data, error } = await supabaseAdmin()
+    .from('meetings')
+    .select('id')
+    .eq('id', meetingId)
+    .eq('advisor_id', advisorId)
+    .single();
+  if (error || !data) {
+    throw new Error('Schůzka nenalezena nebo k ní nemáte přístup.');
+  }
 }
 
 // ─── runFullPipeline ──────────────────────────────────────────────────────────
@@ -143,18 +161,20 @@ export async function runFullPipeline(input: {
   liveTranscriptText?: string;
 }): Promise<void> {
   const { meetingId, liveTranscriptText } = input;
+  const advisorId = await currentAdvisorId();
   const admin = supabaseAdmin();
 
   try {
-    // 1. Fetch meeting row
+    // 1. Fetch meeting row scoped to this advisor
     const { data: meeting, error: meetingError } = await admin
       .from('meetings')
       .select('*')
       .eq('id', meetingId)
+      .eq('advisor_id', advisorId)
       .single();
 
     if (meetingError || !meeting) {
-      throw new Error(`Schůzka ${meetingId} nenalezena: ${meetingError?.message ?? ''}`);
+      throw new Error(`Schůzka ${meetingId} nenalezena nebo k ní nemáte přístup.`);
     }
     const meetingRow = meeting as MeetingRow;
 
@@ -179,7 +199,7 @@ export async function runFullPipeline(input: {
     await logEvent({
       type: 'transcription.started',
       data: { meeting_id: meetingId },
-      advisorId: MOCK_ADVISOR_ID,
+      advisorId,
       tenantId: MOCK_TENANT_ID,
     });
 
@@ -191,7 +211,7 @@ export async function runFullPipeline(input: {
         meeting_id: meetingId,
         latency_ms: whisperResult.latency_ms,
       },
-      advisorId: MOCK_ADVISOR_ID,
+      advisorId,
       tenantId: MOCK_TENANT_ID,
     });
 
@@ -218,7 +238,7 @@ export async function runFullPipeline(input: {
       await logEvent({
         type: 'reconciliation.completed',
         data: { meeting_id: meetingId, latency_ms: reconcileResult.latency_ms },
-        advisorId: MOCK_ADVISOR_ID,
+        advisorId,
         tenantId: MOCK_TENANT_ID,
       });
     }
@@ -291,7 +311,7 @@ export async function runFullPipeline(input: {
         tokens: extractionResult.tokens,
         latency_ms: extractionResult.latency_ms,
       },
-      advisorId: MOCK_ADVISOR_ID,
+      advisorId,
       tenantId: MOCK_TENANT_ID,
     });
 
@@ -318,7 +338,7 @@ export async function runFullPipeline(input: {
     await logEvent({
       type: 'calculation.completed',
       data: { meeting_id: meetingId },
-      advisorId: MOCK_ADVISOR_ID,
+      advisorId,
       tenantId: MOCK_TENANT_ID,
     });
 
@@ -327,14 +347,14 @@ export async function runFullPipeline(input: {
       calculation,
     });
 
-    // Fetch customer name for the PDF
-    const { data: customerData } = await admin
-      .from('customers')
-      .select('full_name')
-      .eq('id', meetingRow.customer_id)
-      .single();
+    // Fetch customer name + advisor display name for the PDF
+    const [{ data: customerData }, { data: advisorData }] = await Promise.all([
+      admin.from('customers').select('full_name').eq('id', meetingRow.customer_id).single(),
+      admin.from('advisors').select('full_name, email').eq('id', advisorId).single(),
+    ]);
 
     const customerName = (customerData as { full_name: string } | null)?.full_name ?? null;
+    const advisorRow = advisorData as { full_name: string; email: string } | null;
 
     const pdfBuffer = await generateOfferPdfBuffer({
       customer: {
@@ -345,7 +365,10 @@ export async function runFullPipeline(input: {
         has_children: extractionResult.data.customer.has_children,
         children_count: extractionResult.data.customer.children_count,
       },
-      advisor: { full_name: 'Karel Novák', email: 'karel.novak@4fin.cz' },
+      advisor: {
+        full_name: advisorRow?.full_name ?? 'Poradce',
+        email: advisorRow?.email ?? '',
+      },
       tenant: { name: '4FIN HOLDING' },
       extraction: extractionResult.data,
       calculation,
@@ -354,14 +377,14 @@ export async function runFullPipeline(input: {
     });
 
     const { publicUrl } = await uploadOfferPdf({
-      advisorId: MOCK_ADVISOR_ID,
+      advisorId,
       meetingId,
       buffer: pdfBuffer,
     });
 
     await admin.from('offers').insert({
       tenant_id: MOCK_TENANT_ID,
-      advisor_id: MOCK_ADVISOR_ID,
+      advisor_id: advisorId,
       customer_id: meetingRow.customer_id,
       meeting_id: meetingId,
       pdf_url: publicUrl,
@@ -373,7 +396,7 @@ export async function runFullPipeline(input: {
     await logEvent({
       type: 'pdf.generated',
       data: { meeting_id: meetingId, pdf_url: publicUrl },
-      advisorId: MOCK_ADVISOR_ID,
+      advisorId,
       tenantId: MOCK_TENANT_ID,
     });
 
@@ -387,11 +410,17 @@ export async function runFullPipeline(input: {
         meeting_id: meetingId,
         error: err instanceof Error ? err.message : String(err),
       },
-      advisorId: MOCK_ADVISOR_ID,
+      advisorId,
       tenantId: MOCK_TENANT_ID,
     });
     throw err;
   }
+}
+
+// ─── retryPipeline (named action for the failed-state retry button) ──────────
+
+export async function retryPipeline(meetingId: string): Promise<void> {
+  await runFullPipeline({ meetingId });
 }
 
 // ─── getMeetingFull ───────────────────────────────────────────────────────────
@@ -418,13 +447,15 @@ export interface MeetingFull {
 }
 
 export async function getMeetingFull(meetingId: string): Promise<MeetingFull | null> {
+  const advisorId = await currentAdvisorId();
   const admin = supabaseAdmin();
 
-  // Fetch meeting
+  // Fetch meeting scoped to this advisor — prevents cross-advisor leak.
   const { data: meeting, error: meetingError } = await admin
     .from('meetings')
     .select('id, status, audio_url, capture_method, scheduled_at, recorded_at, created_at, customer_id')
     .eq('id', meetingId)
+    .eq('advisor_id', advisorId)
     .single();
 
   if (meetingError || !meeting) return null;
@@ -487,12 +518,13 @@ export interface MeetingListItem {
 }
 
 export async function getMeetingsList(): Promise<MeetingListItem[]> {
+  const advisorId = await currentAdvisorId();
   const admin = supabaseAdmin();
 
   const { data, error } = await admin
     .from('meetings')
     .select('id, status, created_at, customers(full_name)')
-    .eq('advisor_id', MOCK_ADVISOR_ID)
+    .eq('advisor_id', advisorId)
     .order('created_at', { ascending: false });
 
   if (error || !data) return [];

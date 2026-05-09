@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { MOCK_ADVISOR_ID } from '@/lib/auth';
+import { currentAdvisorId } from '@/lib/auth';
 import { NewMeetingShell } from './new-meeting-shell';
 
 export const metadata = {
@@ -16,10 +16,11 @@ export default async function NovaSchuzkaPage() {
   let dbError = false;
 
   try {
+    const advisorId = await currentAdvisorId();
     const { data, error } = await supabaseAdmin()
       .from('customers')
       .select('id, full_name')
-      .eq('advisor_id', MOCK_ADVISOR_ID)
+      .eq('advisor_id', advisorId)
       .order('full_name');
 
     if (error) throw error;

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { loginAsDemoAdvisor } from '@/lib/actions/auth';
 
 const DEMO_ADVISORS = [
   { id: 'ad0000000001', name: 'Karel Novák', email: 'karel.novak@4fin.cz', role: 'Senior poradce' },
@@ -31,29 +31,30 @@ export default function LoginPage() {
 
         <div className="space-y-2">
           {DEMO_ADVISORS.map((advisor) => (
-            <Link
-              key={advisor.id}
-              href="/dashboard"
-              className="group flex items-center gap-4 rounded-2xl border border-border-subtle bg-bg-primary px-5 py-4 transition-colors hover:bg-bg-tertiary"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-secondary text-[14px] font-semibold text-text-primary">
-                {initials(advisor.name)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[15px] font-medium text-text-primary">
-                  {advisor.name}
-                </p>
-                <p className="truncate text-[13px] text-text-tertiary">
-                  {advisor.role} · {advisor.email}
-                </p>
-              </div>
-              <span
-                aria-hidden
-                className="text-text-tertiary transition-transform group-hover:translate-x-0.5"
+            <form key={advisor.id} action={loginAsDemoAdvisor.bind(null, advisor.id)}>
+              <button
+                type="submit"
+                className="group flex w-full items-center gap-4 rounded-2xl border border-border-subtle bg-bg-primary px-5 py-4 text-left transition-colors hover:bg-bg-tertiary"
               >
-                →
-              </span>
-            </Link>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-bg-secondary text-[14px] font-semibold text-text-primary">
+                  {initials(advisor.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-medium text-text-primary">
+                    {advisor.name}
+                  </p>
+                  <p className="truncate text-[13px] text-text-tertiary">
+                    {advisor.role} · {advisor.email}
+                  </p>
+                </div>
+                <span
+                  aria-hidden
+                  className="text-text-tertiary transition-transform group-hover:translate-x-0.5"
+                >
+                  →
+                </span>
+              </button>
+            </form>
           ))}
         </div>
 

@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { getMeetingFull } from '@/lib/actions/meetings';
+import { getMeetingFull, retryPipeline } from '@/lib/actions/meetings';
 import { MeetingStatusPill } from '@/components/meeting-status-pill';
 import type { MeetingStatus } from '@/components/meeting-status-pill';
 import { TranscriptViewer } from '@/components/transcript-viewer';
@@ -106,14 +106,7 @@ export default async function MeetingDetailPage({
           <p className="text-[13px] text-text-secondary mb-4">
             Pipeline pro tuto schůzku skončil chybou. Zkuste ji spustit znovu.
           </p>
-          {/* Retry button handled client-side — inline form action */}
-          <form
-            action={async () => {
-              'use server';
-              const { runFullPipeline } = await import('@/lib/actions/meetings');
-              await runFullPipeline({ meetingId: id });
-            }}
-          >
+          <form action={retryPipeline.bind(null, id)}>
             <button
               type="submit"
               className="inline-flex h-11 items-center justify-center rounded-xl border border-border-subtle bg-bg-primary px-6 text-[15px] font-medium text-text-primary transition-colors hover:bg-bg-tertiary"
