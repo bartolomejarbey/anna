@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Mic } from 'lucide-react';
+import { Microphone } from '@phosphor-icons/react/dist/ssr';
 import { getMeetingsList } from '@/lib/actions/meetings';
 import { MeetingStatusPill } from '@/components/meeting-status-pill';
 import type { MeetingStatus } from '@/components/meeting-status-pill';
@@ -22,38 +22,28 @@ export default async function SchuzkyPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
-      {/* Header */}
-      <div className="mb-10 flex items-center justify-between">
-        <h1 className="text-4xl font-semibold text-text-primary">Schůzky</h1>
+    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <div className="mb-12 flex items-center justify-between">
+        <h1 className="text-h1 text-primary">Schůzky</h1>
         <Link href="/schuzky/nova">
           <Button>Nová schůzka</Button>
         </Link>
       </div>
 
-      {/* DB not available */}
       {dbError && (
-        <div className="mb-8 rounded-xl border border-border-subtle bg-bg-tertiary px-6 py-4">
-          <p className="text-[15px] text-text-secondary">
-            Data se zobrazí po napojení na databázi.
-          </p>
-        </div>
+        <p className="mb-8 text-body text-secondary">
+          Data se zobrazí po napojení na databázi.
+        </p>
       )}
 
-      {/* Empty state */}
       {!dbError && meetings.length === 0 && (
         <EmptyState
-          icon={Mic}
-          heading="Zatím tu nemáte žádnou schůzku."
-          description="Zahajte svoji první schůzku s naslouchačem kliknutím níže."
-          action={{
-            label: 'Nová schůzka',
-            href: '/schuzky/nova',
-          }}
+          icon={Microphone}
+          heading="Žádná schůzka."
+          action={{ label: 'Začít schůzku', href: '/schuzky/nova' }}
         />
       )}
 
-      {/* Meeting list */}
       {meetings.length > 0 && (
         <div className="flex flex-col gap-3">
           {meetings.map((m) => {
@@ -67,13 +57,13 @@ export default async function SchuzkyPage() {
               <Link key={m.id} href={`/schuzky/${m.id}`}>
                 <Card
                   variant="compact"
-                  className="flex items-center justify-between transition-colors hover:bg-bg-secondary cursor-pointer"
+                  className="flex items-center justify-between transition-colors hover:border-border-default cursor-pointer"
                 >
                   <div className="flex flex-col gap-1">
-                    <p className="text-[15px] font-medium text-text-primary">
+                    <p className="text-body font-medium text-primary">
                       {m.customer_name ?? 'Neznámý zákazník'}
                     </p>
-                    <p className="text-[13px] text-text-tertiary">{date}</p>
+                    <p className="text-body-sm text-tertiary">{date}</p>
                   </div>
                   <MeetingStatusPill status={m.status as MeetingStatus} />
                 </Card>

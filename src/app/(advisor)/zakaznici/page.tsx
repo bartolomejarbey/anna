@@ -1,5 +1,4 @@
-import Link from 'next/link';
-import { Users } from 'lucide-react';
+import { Users } from '@phosphor-icons/react/dist/ssr';
 import { currentAdvisorId } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { Card } from '@/components/ui/card';
@@ -47,29 +46,20 @@ export default async function ZakazniciPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
-      <div className="mb-10">
-        <h1 className="text-4xl font-semibold text-text-primary">Zákazníci</h1>
-        <p className="mt-2 text-[15px] text-text-secondary">
-          {customers.length > 0
-            ? `${customers.length} zákazníků v péči.`
-            : 'Vaši zákazníci se zobrazí po první schůzce.'}
-        </p>
-      </div>
+    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <h1 className="text-h1 text-primary mb-12">Zákazníci</h1>
 
       {dbError && (
-        <div className="mb-8 rounded-xl border border-border-subtle bg-bg-tertiary px-6 py-4">
-          <p className="text-[15px] text-text-secondary">
-            Data se zobrazí po napojení na databázi.
-          </p>
-        </div>
+        <p className="mb-8 text-body text-secondary">
+          Data se zobrazí po napojení na databázi.
+        </p>
       )}
 
       {!dbError && customers.length === 0 && (
         <EmptyState
           icon={Users}
-          heading="Žádný zákazník v systému."
-          description="Přidávejte je ze stránky schůzky."
+          heading="Žádný zákazník."
+          action={{ label: 'Začít schůzku', href: '/schuzky/nova' }}
         />
       )}
 
@@ -82,8 +72,8 @@ export default async function ZakazniciPage() {
               className="flex items-center justify-between"
             >
               <div className="flex flex-col gap-1">
-                <p className="text-[15px] font-medium text-text-primary">{c.full_name}</p>
-                <p className="text-[13px] text-text-tertiary">
+                <p className="text-body font-medium text-primary">{c.full_name}</p>
+                <p className="text-body-sm text-tertiary">
                   {[
                     c.email,
                     c.marital_status ? MARITAL[c.marital_status] ?? c.marital_status : null,
@@ -93,7 +83,7 @@ export default async function ZakazniciPage() {
                     .join(' · ')}
                 </p>
               </div>
-              <div className="text-[13px] text-text-secondary">
+              <div className="text-body-sm text-secondary">
                 {c.monthly_income_czk != null ? CZK.format(c.monthly_income_czk) : '—'}
               </div>
             </Card>

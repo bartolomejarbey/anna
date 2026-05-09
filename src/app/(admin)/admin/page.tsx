@@ -1,13 +1,7 @@
+import { Pulse } from '@phosphor-icons/react/dist/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Activity } from 'lucide-react';
-
-// -----------------------------------------------------------------------
-// Supabase query shim
-// DB types are placeholders until migration lands. We use a narrow interface
-// so we avoid `any` while still being able to query the real Postgres tables.
-// -----------------------------------------------------------------------
 
 interface QueryBuilder {
   select(columns: string, opts?: { count?: 'exact'; head?: boolean }): QueryBuilder;
@@ -25,10 +19,6 @@ interface AdminDb {
 function getDb(): AdminDb {
   return createAdminClient() as unknown as AdminDb;
 }
-
-// -----------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------
 
 function formatRelative(date: Date): string {
   const diffMs = Date.now() - date.getTime();
@@ -62,10 +52,6 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 function labelForEventType(eventType: string): string {
   return EVENT_TYPE_LABELS[eventType] ?? eventType;
 }
-
-// -----------------------------------------------------------------------
-// Data fetching (wrapped in try/catch — DB may not be migrated yet)
-// -----------------------------------------------------------------------
 
 interface MeetingCountResult {
   count: number | null;
@@ -151,10 +137,6 @@ async function fetchRecentActivity(): Promise<ActivityResult> {
   }
 }
 
-// -----------------------------------------------------------------------
-// Page
-// -----------------------------------------------------------------------
-
 export default async function AdminPage() {
   const [meetingResult, activityResult] = await Promise.all([
     fetchMeetingsToday(),
@@ -163,67 +145,55 @@ export default async function AdminPage() {
 
   return (
     <div>
-      <div className="mb-10">
-        <h1 className="text-4xl font-semibold text-text-primary">Admin přehled</h1>
-        <p className="mt-2 text-[15px] text-text-secondary">Souhrn aktivity v Anně.</p>
-      </div>
+      <h1 className="text-h1 text-primary mb-12">Admin</h1>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Metric tile: meetings today */}
-        <Card variant="compact">
+        <Card>
           <CardHeader>
-            <CardDescription>Schůzek dnes</CardDescription>
+            <p className="text-caption text-tertiary">Schůzek dnes</p>
           </CardHeader>
-          <CardContent className="mt-2">
+          <CardContent>
             {meetingResult.error ? (
-              <p className="text-[14px] text-text-secondary">
+              <p className="text-body-sm text-secondary">
                 Data se zobrazí po napojení na databázi.
               </p>
             ) : (
               <>
-                <p className="text-5xl font-semibold text-text-primary">
-                  {meetingResult.count ?? 0}
-                </p>
-                <p className="mt-1.5 text-[13px] text-text-tertiary">
-                  od {meetingResult.todayIso}
-                </p>
+                <p className="text-display text-primary">{meetingResult.count ?? 0}</p>
+                <p className="mt-2 text-body-sm text-tertiary">od {meetingResult.todayIso}</p>
               </>
             )}
           </CardContent>
         </Card>
 
-        {/* Recent activity feed */}
-        <Card variant="compact">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-[17px]">Poslední aktivita</CardTitle>
+            <CardTitle>Poslední aktivita</CardTitle>
           </CardHeader>
-          <CardContent className="mt-3">
+          <CardContent>
             {activityResult.error ? (
-              <p className="text-[14px] text-text-secondary">
+              <p className="text-body-sm text-secondary">
                 Data se zobrazí po napojení na databázi.
               </p>
             ) : activityResult.events.length === 0 ? (
               <EmptyState
-                icon={Activity}
-                heading="Žádná aktivita"
-                description="Zatím nebyla zaznamenána žádná aktivita."
-                className="py-8"
+                icon={Pulse}
+                heading="Žádná aktivita."
+                className="py-4"
               />
             ) : (
               <ul className="divide-y divide-border-subtle">
                 {activityResult.events.map((event) => (
                   <li key={event.id} className="flex items-center justify-between py-3">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[13px] font-medium text-text-primary">
+                      <span className="text-body-sm font-medium text-primary">
                         {labelForEventType(event.event_type)}
                       </span>
                       {event.advisor_name && (
-                        <span className="text-[12px] text-text-tertiary">
-                          {event.advisor_name}
-                        </span>
+                        <span className="text-body-sm text-tertiary">{event.advisor_name}</span>
                       )}
                     </div>
-                    <span className="ml-4 shrink-0 text-[12px] text-text-tertiary">
+                    <span className="ml-4 shrink-0 text-body-sm text-tertiary">
                       {formatRelative(new Date(event.created_at))}
                     </span>
                   </li>

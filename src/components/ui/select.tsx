@@ -1,7 +1,7 @@
 'use client';
 
 import * as RadixSelect from '@radix-ui/react-select';
-import { ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { CaretDown, CaretUp, Check } from '@phosphor-icons/react';
 import { cn } from '@/lib/cn';
 
 export const Select = RadixSelect.Root;
@@ -16,14 +16,14 @@ export function SelectTrigger({ className, children, ...props }: SelectTriggerPr
   return (
     <RadixSelect.Trigger
       className={cn(
-        'flex h-11 w-full items-center justify-between rounded-lg border border-border-subtle bg-bg-primary px-4 text-[15px] text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent data-[placeholder]:text-text-tertiary transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-10 w-full items-center justify-between rounded-[8px] border border-border-default bg-surface px-3 text-body text-primary placeholder:text-tertiary focus:outline-none focus:border-accent data-[placeholder]:text-tertiary transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}
     >
       {children}
       <RadixSelect.Icon>
-        <ChevronDown className="h-4 w-4 text-text-tertiary" />
+        <CaretDown size={14} weight="regular" className="text-tertiary" />
       </RadixSelect.Icon>
     </RadixSelect.Trigger>
   );
@@ -38,19 +38,19 @@ export function SelectContent({ className, children, position = 'popper', ...pro
     <RadixSelect.Portal>
       <RadixSelect.Content
         className={cn(
-          'relative z-50 min-w-[8rem] overflow-hidden rounded-xl border border-border-subtle bg-bg-primary data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+          'relative z-50 min-w-[8rem] overflow-hidden rounded-[12px] border border-border-subtle bg-surface',
           position === 'popper' && 'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
           className,
         )}
         position={position}
         {...props}
       >
-        <RadixSelect.ScrollUpButton className="flex items-center justify-center py-1 text-text-tertiary">
-          <ChevronUp className="h-4 w-4" />
+        <RadixSelect.ScrollUpButton className="flex items-center justify-center py-1 text-tertiary">
+          <CaretUp size={14} weight="regular" />
         </RadixSelect.ScrollUpButton>
         <RadixSelect.Viewport className="p-1">{children}</RadixSelect.Viewport>
-        <RadixSelect.ScrollDownButton className="flex items-center justify-center py-1 text-text-tertiary">
-          <ChevronDown className="h-4 w-4" />
+        <RadixSelect.ScrollDownButton className="flex items-center justify-center py-1 text-tertiary">
+          <CaretDown size={14} weight="regular" />
         </RadixSelect.ScrollDownButton>
       </RadixSelect.Content>
     </RadixSelect.Portal>
@@ -65,14 +65,14 @@ export function SelectItem({ className, children, ...props }: SelectItemProps) {
   return (
     <RadixSelect.Item
       className={cn(
-        'relative flex w-full cursor-default select-none items-center rounded-lg py-2 pl-8 pr-3 text-[15px] text-text-primary outline-none focus:bg-bg-tertiary data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex w-full cursor-default select-none items-center rounded-[6px] py-2 pl-8 pr-3 text-body text-primary outline-none focus:bg-subtle data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
     >
       <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
         <RadixSelect.ItemIndicator>
-          <Check className="h-4 w-4" />
+          <Check size={14} weight="regular" />
         </RadixSelect.ItemIndicator>
       </span>
       <RadixSelect.ItemText>{children}</RadixSelect.ItemText>
@@ -83,7 +83,7 @@ export function SelectItem({ className, children, ...props }: SelectItemProps) {
 export function SelectLabel({ className, children, ...props }: React.ComponentPropsWithoutRef<typeof RadixSelect.Label>) {
   return (
     <RadixSelect.Label
-      className={cn('py-1.5 pl-8 pr-3 text-sm font-medium text-text-tertiary', className)}
+      className={cn('py-1.5 pl-8 pr-3 text-caption text-tertiary', className)}
       {...props}
     >
       {children}

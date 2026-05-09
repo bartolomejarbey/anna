@@ -9,19 +9,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-screen bg-bg-secondary">
-      <header className="border-b border-border-subtle bg-bg-primary">
-        <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between px-8">
-          <h1 className="text-[15px] font-semibold text-text-primary">Anna · Admin</h1>
+    <div className="min-h-screen bg-canvas">
+      <header className="border-b border-border-subtle bg-surface">
+        <div className="mx-auto flex h-16 w-full max-w-[960px] items-center justify-between px-8">
+          <h1 className="text-body font-medium text-primary">Anna · Admin</h1>
           <Link
             href="/dashboard"
-            className="text-[13px] text-text-secondary hover:text-text-primary transition-colors"
+            className="text-body-sm text-secondary transition-colors hover:text-primary"
           >
-            Zpět do aplikace
+            Zpět
           </Link>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[1280px] px-8 py-12">{children}</main>
+      <main className="mx-auto w-full max-w-[960px] px-8 py-16">{children}</main>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface LoadingStateProps {
@@ -6,11 +5,13 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({ text = 'Načítáme…', className }: LoadingStateProps) {
+export function LoadingState({ text, className }: LoadingStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-24 gap-4', className)}>
-      <Loader2 className="h-6 w-6 animate-spin text-text-tertiary" />
-      {text && <p className="text-[15px] text-text-secondary">{text}</p>}
+    <div className={cn('flex flex-col gap-3 py-8', className)}>
+      <div className="skeleton h-3 w-full" />
+      <div className="skeleton h-3 w-4/5" />
+      <div className="skeleton h-3 w-3/5" />
+      {text && <p className="mt-2 text-body-sm text-tertiary">{text}</p>}
     </div>
   );
 }

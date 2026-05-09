@@ -2,10 +2,8 @@
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone, type FileRejection } from 'react-dropzone';
-import { UploadCloud, X } from 'lucide-react';
+import { UploadSimple, X } from '@phosphor-icons/react';
 import { cn } from '@/lib/cn';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface AudioUploaderProps {
   meetingId: string;
@@ -14,7 +12,6 @@ interface AudioUploaderProps {
   disabled?: boolean;
 }
 
-// Accepted MIME types that Whisper handles natively
 const ACCEPTED_MIME: Record<string, string[]> = {
   'audio/m4a': ['.m4a'],
   'audio/mp4': ['.m4a', '.mp4'],
@@ -28,8 +25,6 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export function AudioUploader({
   meetingId: _meetingId,
@@ -51,9 +46,7 @@ export function AudioUploader({
         if (firstError.code === 'file-too-large') {
           setUploadError(`Soubor je příliš velký (max ${maxSizeMB} MB).`);
         } else {
-          setUploadError(
-            'Tento formát zvuku zatím nepodporujeme — použijte M4A, MP3 nebo WAV.',
-          );
+          setUploadError('Tento formát zvuku zatím nepodporujeme — použijte M4A, MP3 nebo WAV.');
         }
         return;
       }
@@ -82,22 +75,21 @@ export function AudioUploader({
     setUploadError(null);
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   if (selectedFile) {
     return (
-      <div className="flex items-center justify-between rounded-xl border border-border-subtle bg-bg-tertiary px-5 py-4">
+      <div className="flex items-center justify-between rounded-[8px] border border-border-subtle bg-surface px-4 py-3">
         <div className="flex flex-col gap-0.5">
-          <p className="text-[15px] font-medium text-text-primary">{selectedFile.name}</p>
-          <p className="text-xs text-text-tertiary">{formatBytes(selectedFile.size)}</p>
+          <p className="text-body font-medium text-primary">{selectedFile.name}</p>
+          <p className="text-body-sm text-tertiary">{formatBytes(selectedFile.size)}</p>
         </div>
         {!disabled && (
           <button
+            type="button"
             onClick={handleRemove}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-secondary hover:text-text-primary"
+            className="flex h-8 w-8 items-center justify-center rounded-[6px] text-tertiary transition-colors hover:bg-subtle hover:text-primary"
             aria-label="Odebrat soubor"
           >
-            <X className="h-4 w-4" />
+            <X size={14} weight="regular" />
           </button>
         )}
       </div>
@@ -109,32 +101,22 @@ export function AudioUploader({
       <div
         {...getRootProps()}
         className={cn(
-          'flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border-subtle bg-bg-tertiary px-8 py-12 text-center transition-colors',
-          isDragActive && 'border-accent bg-bg-secondary',
+          'flex cursor-pointer items-center gap-3 rounded-[8px] border border-dashed border-border-subtle bg-surface px-4 py-4 transition-colors',
+          isDragActive && 'border-accent bg-subtle',
           disabled && 'cursor-not-allowed opacity-50',
         )}
       >
         <input {...getInputProps()} />
-
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border-subtle bg-bg-primary">
-          <UploadCloud className="h-5 w-5 text-text-tertiary" />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <p className="text-[15px] font-medium text-text-primary">
-            {isDragActive
-              ? 'Pusťte soubor sem'
-              : 'Přetáhněte zvukový soubor sem nebo klikněte pro výběr'}
+        <UploadSimple size={18} weight="regular" className="text-tertiary shrink-0" />
+        <div className="flex flex-col gap-0.5">
+          <p className="text-body text-primary">
+            {isDragActive ? 'Pusťte soubor sem' : 'Přetáhněte zvuk nebo klikněte'}
           </p>
-          <p className="text-[13px] text-text-tertiary">
-            M4A, MP3, WAV — max {maxSizeMB} MB
-          </p>
+          <p className="text-body-sm text-tertiary">M4A, MP3, WAV — max {maxSizeMB} MB</p>
         </div>
       </div>
 
-      {uploadError && (
-        <p className="text-[13px] text-error">{uploadError}</p>
-      )}
+      {uploadError && <p className="text-body-sm text-error">{uploadError}</p>}
     </div>
   );
 }

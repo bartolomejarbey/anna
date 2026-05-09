@@ -1,36 +1,118 @@
 @import "tailwindcss";
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&f[]=jetbrains-mono@400,500&display=swap');
 
 @theme {
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f4f0e9;
-  --color-bg-tertiary: #faf7f2;
+  /* Backgrounds — vrstvená béžová */
+  --color-canvas: #faf7f2;
+  --color-surface: #ffffff;
+  --color-subtle: #f4f0e9;
+  --color-inset: #ede7db;
 
+  /* Borders */
   --color-border-subtle: #e8e0d5;
+  --color-border-default: #d6cdbe;
+  --color-border-strong: #1d1d1f;
 
+  /* Text */
   --color-text-primary: #1d1d1f;
-  --color-text-secondary: #6e6e73;
-  --color-text-tertiary: #8e8e93;
+  --color-text-secondary: #5c5a56;
+  --color-text-tertiary: #8b8780;
+  --color-text-disabled: #b5b0a6;
 
+  /* Accent — single, skoro černá */
   --color-accent: #1d1d1f;
   --color-accent-hover: #000000;
+  --color-accent-text: #faf7f2;
 
+  /* Functional (subtle, finanční) */
   --color-success: #1f4f3f;
-  --color-warning: #b8860b;
-  --color-error: #8b1a1a;
+  --color-warning: #8b6914;
+  --color-error: #6b1818;
 
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Functional backgrounds — 10 % alpha */
+  --color-success-bg: rgba(31, 79, 63, 0.1);
+  --color-warning-bg: rgba(139, 105, 20, 0.1);
+  --color-error-bg: rgba(107, 24, 24, 0.1);
 
-  --radius-input: 0.625rem;
-  --radius-button: 0.75rem;
-  --radius-card: 1rem;
+  /* Fonts */
+  --font-sans: 'General Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --container-content: 1280px;
+  /* Radius — žádné rounded-full / rounded-xl bez rozmyslu */
+  --radius-input: 8px;
+  --radius-button: 8px;
+  --radius-card: 12px;
+
+  --container-content: 960px;
+}
+
+@utility text-display {
+  font-size: 52px;
+  line-height: 1.05;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+@utility text-h1 {
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+@utility text-h2 {
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+@utility text-h3 {
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+@utility text-body-lg {
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+@utility text-body {
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+@utility text-body-sm {
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+@utility text-caption {
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+@utility text-mono {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 html,
 body {
-  background-color: var(--color-bg-primary);
+  background-color: var(--color-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -40,5 +122,35 @@ body {
 
 ::selection {
   background: var(--color-text-primary);
-  color: var(--color-bg-primary);
+  color: var(--color-canvas);
+}
+
+@keyframes anna-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@utility skeleton {
+  background-color: var(--color-subtle);
+  border-radius: 6px;
+  animation: anna-pulse 1.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes anna-slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0%);   opacity: 1; }
+}
+
+@keyframes anna-slide-out-right {
+  from { transform: translateX(0%);   opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes anna-recording-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.85; }
+}
+
+.anna-recording-pulse {
+  animation: anna-recording-pulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { currentAdvisor, currentAdvisorId } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { MeetingStatusPill } from '@/components/meeting-status-pill';
 import type { MeetingStatus } from '@/components/meeting-status-pill';
 
@@ -28,6 +28,7 @@ export default async function DashboardPage() {
   const greetingName = vocative(firstName);
 
   const sb = supabaseAdmin();
+  // eslint-disable-next-line react-hooks/purity -- server component, runs once per request
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const [latestMeetingRes, recentOffersRes, weekActivityRes] = await Promise.all([
@@ -81,38 +82,35 @@ export default async function DashboardPage() {
   const weekReady = weekMeetings.filter((m) => m.status === 'ready').length;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
-      <div className="mb-10">
-        <h1 className="text-4xl font-semibold text-text-primary">Dnes</h1>
-        <p className="mt-2 text-[15px] text-text-secondary">Dobrý den, {greetingName}.</p>
-      </div>
+    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <h1 className="text-display text-primary mb-12">Dobrý den, {greetingName}</h1>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Poslední schůzka</CardTitle>
-            <CardDescription>
-              {latestMeeting?.customerName ?? 'Zatím žádná schůzka.'}
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {latestMeeting ? (
               <Link
                 href={`/schuzky/${latestMeeting.id}`}
-                className="flex items-center justify-between gap-3"
+                className="flex flex-col gap-3"
               >
-                <span className="text-[13px] text-text-secondary">
-                  {new Date(latestMeeting.recorded_at ?? latestMeeting.created_at).toLocaleDateString(
-                    'cs-CZ',
-                    { day: 'numeric', month: 'long' },
-                  )}
+                <span className="text-body font-medium text-primary">
+                  {latestMeeting.customerName ?? 'Zákazník'}
                 </span>
-                <MeetingStatusPill status={latestMeeting.status as MeetingStatus} />
+                <div className="flex items-center justify-between">
+                  <span className="text-body-sm text-tertiary">
+                    {new Date(latestMeeting.recorded_at ?? latestMeeting.created_at).toLocaleDateString(
+                      'cs-CZ',
+                      { day: 'numeric', month: 'long' },
+                    )}
+                  </span>
+                  <MeetingStatusPill status={latestMeeting.status as MeetingStatus} />
+                </div>
               </Link>
             ) : (
-              <p className="text-[13px] text-text-tertiary">
-                Začněte první schůzku v sekci Schůzky.
-              </p>
+              <p className="text-body-sm text-tertiary">Zatím žádná.</p>
             )}
           </CardContent>
         </Card>
@@ -120,15 +118,14 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Poslední nabídky</CardTitle>
-            <CardDescription>Vygenerované PDF nabídky pro vaše zákazníky.</CardDescription>
           </CardHeader>
           <CardContent>
             {recentOffers.length === 0 ? (
-              <p className="text-[13px] text-text-tertiary">Zatím žádná nabídka.</p>
+              <p className="text-body-sm text-tertiary">Zatím žádná.</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {recentOffers.map((o) => (
-                  <li key={o.id} className="text-[13px] text-text-secondary">
+                  <li key={o.id} className="text-body-sm text-secondary">
                     {o.customerName ?? 'Zákazník'}
                   </li>
                 ))}
@@ -139,18 +136,17 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Týdenní přehled</CardTitle>
-            <CardDescription>Souhrn aktivity za posledních 7 dní.</CardDescription>
+            <CardTitle>Týden</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="flex flex-col gap-2 text-[13px]">
+            <dl className="flex flex-col gap-2 text-body-sm">
               <div className="flex items-center justify-between">
-                <dt className="text-text-tertiary">Schůzek</dt>
-                <dd className="font-medium text-text-primary">{weekTotal}</dd>
+                <dt className="text-tertiary">Schůzek</dt>
+                <dd className="font-medium text-primary">{weekTotal}</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-text-tertiary">Hotových</dt>
-                <dd className="font-medium text-text-primary">{weekReady}</dd>
+                <dt className="text-tertiary">Hotových</dt>
+                <dd className="font-medium text-primary">{weekReady}</dd>
               </div>
             </dl>
           </CardContent>

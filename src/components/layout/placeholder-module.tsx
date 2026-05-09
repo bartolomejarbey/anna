@@ -16,8 +16,8 @@ export function PlaceholderModule({ title, quarter, description }: PlaceholderMo
         <Badge variant="quarter" className="mb-6 inline-flex">
           {quarter}
         </Badge>
-        <h1 className="text-3xl font-semibold text-text-primary">{title}</h1>
-        <p className="mt-4 text-[15px] text-text-secondary">{description}</p>
+        <h1 className="text-h1 text-primary">{title}</h1>
+        <p className="mt-4 text-body text-secondary">{description}</p>
         <div className="mt-10">
           <Button variant="secondary" disabled>
             Dejte mi vědět, až bude hotovo

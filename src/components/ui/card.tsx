@@ -7,15 +7,15 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const variantClasses: Record<CardVariant, string> = {
-  default: 'p-8',
-  compact: 'p-6',
+  default: 'p-6',
+  compact: 'p-5',
 };
 
 export function Card({ variant = 'default', className, children, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border-subtle bg-bg-tertiary',
+        'rounded-[12px] border border-border-subtle bg-surface',
         variantClasses[variant],
         className,
       )}
@@ -28,7 +28,7 @@ export function Card({ variant = 'default', className, children, ...props }: Car
 
 export function CardHeader({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('flex flex-col gap-1.5', className)} {...props}>
+    <div className={cn('flex flex-col gap-1', className)} {...props}>
       {children}
     </div>
   );
@@ -36,10 +36,7 @@ export function CardHeader({ className, children, ...props }: React.HTMLAttribut
 
 export function CardTitle({ className, children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3
-      className={cn('text-2xl font-semibold text-text-primary leading-tight', className)}
-      {...props}
-    >
+    <h3 className={cn('text-h3 text-primary', className)} {...props}>
       {children}
     </h3>
   );
@@ -47,7 +44,7 @@ export function CardTitle({ className, children, ...props }: React.HTMLAttribute
 
 export function CardDescription({ className, children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('text-[15px] text-text-secondary', className)} {...props}>
+    <p className={cn('text-body-sm text-secondary', className)} {...props}>
       {children}
     </p>
   );
@@ -55,7 +52,7 @@ export function CardDescription({ className, children, ...props }: React.HTMLAtt
 
 export function CardContent({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('mt-6', className)} {...props}>
+    <div className={cn('mt-4', className)} {...props}>
       {children}
     </div>
   );

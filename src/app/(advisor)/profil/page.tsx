@@ -1,6 +1,6 @@
 import { currentAdvisor } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { LogoutButton } from '@/components/logout-button';
 
@@ -29,43 +29,37 @@ export default async function ProfilPage() {
   const roleLabel = advisor ? ROLE_LABELS[advisor.role] ?? advisor.role : 'Poradce';
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
-      <div className="mb-10">
-        <h1 className="text-4xl font-semibold text-text-primary">Profil</h1>
-      </div>
+    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <h1 className="text-h1 text-primary mb-12">Profil</h1>
 
-      <div className="max-w-lg">
+      <div className="max-w-md">
         <Card>
-          <CardHeader>
-            <CardTitle>Osobní údaje</CardTitle>
-            <CardDescription>Informace o vašem účtu a síti.</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="mt-0">
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
                 <Label>Jméno</Label>
-                <p className="text-[15px] text-text-primary">{advisor?.full_name ?? '—'}</p>
+                <p className="text-body text-primary">{advisor?.full_name ?? '—'}</p>
               </div>
               <div className="h-px bg-border-subtle" />
               <div className="flex flex-col gap-1.5">
                 <Label>E-mail</Label>
-                <p className="text-[15px] text-text-primary">{advisor?.email ?? '—'}</p>
+                <p className="text-body text-primary">{advisor?.email ?? '—'}</p>
               </div>
               <div className="h-px bg-border-subtle" />
               <div className="flex flex-col gap-1.5">
                 <Label>Role</Label>
-                <p className="text-[15px] text-text-primary">{roleLabel}</p>
+                <p className="text-body text-primary">{roleLabel}</p>
               </div>
               <div className="h-px bg-border-subtle" />
               <div className="flex flex-col gap-1.5">
                 <Label>Síť</Label>
-                <p className="text-[15px] text-text-primary">{tenantName}</p>
+                <p className="text-body text-primary">{tenantName}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="mt-6">
+        <div className="mt-8">
           <LogoutButton />
         </div>
       </div>

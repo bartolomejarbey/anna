@@ -1,17 +1,14 @@
-import { FileText } from 'lucide-react';
+import { FileText } from '@phosphor-icons/react/dist/ssr';
 import { EmptyState } from '@/components/ui/empty-state';
 
 export default function NabidkyPage() {
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
-      <div className="mb-10">
-        <h1 className="text-4xl font-semibold text-text-primary">Nabídky</h1>
-      </div>
-
+    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <h1 className="text-h1 text-primary mb-12">Nabídky</h1>
       <EmptyState
         icon={FileText}
-        heading="Tady budou vaše vygenerované PDF nabídky pro zákazníky."
-        description="Nabídka vznikne automaticky po zpracování nahrané schůzky."
+        heading="Žádná nabídka."
+        action={{ label: 'Začít schůzku', href: '/schuzky/nova' }}
       />
     </div>
   );

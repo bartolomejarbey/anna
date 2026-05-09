@@ -8,7 +8,7 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 const variantClasses: Record<BadgeVariant, string> = {
   neutral:
-    'border border-border-subtle bg-bg-tertiary text-text-secondary',
+    'border border-border-subtle bg-subtle text-secondary',
   success:
     'border border-[color-mix(in_oklab,_var(--color-success)_30%,_transparent)] bg-[color-mix(in_oklab,_var(--color-success)_10%,_transparent)] text-success',
   warning:
@@ -16,14 +16,14 @@ const variantClasses: Record<BadgeVariant, string> = {
   error:
     'border border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)] bg-[color-mix(in_oklab,_var(--color-error)_10%,_transparent)] text-error',
   quarter:
-    'border border-border-subtle bg-bg-tertiary text-text-secondary',
+    'border border-border-subtle bg-subtle text-secondary',
 };
 
 export function Badge({ variant = 'neutral', className, children, ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded-full px-2 py-0.5 text-caption',
         variantClasses[variant],
         className,
       )}

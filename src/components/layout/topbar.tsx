@@ -1,4 +1,6 @@
-import { Search } from 'lucide-react';
+'use client';
+
+import { CaretDown } from '@phosphor-icons/react';
 import { cn } from '@/lib/cn';
 
 interface Advisor {
@@ -11,56 +13,43 @@ interface Advisor {
 
 interface TopbarProps {
   advisor: Advisor;
+  onOpenAssistant?: () => void;
   children?: React.ReactNode;
   className?: string;
 }
 
-export function Topbar({ advisor, children, className }: TopbarProps) {
-  const initials = advisor.full_name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
+export function Topbar({ advisor, onOpenAssistant, children, className }: TopbarProps) {
   return (
     <header
       className={cn(
-        'flex h-16 items-center justify-between border-b border-border-subtle bg-bg-primary px-8',
+        'flex h-14 items-center justify-between border-b border-border-subtle bg-canvas px-8',
         className,
       )}
     >
-      {/* Page title slot */}
       <div className="flex items-center gap-4">
-        {children && (
-          <div className="text-lg font-semibold text-text-primary">{children}</div>
+        {children && <h2 className="text-h2 text-primary">{children}</h2>}
+      </div>
+
+      <div className="flex items-center gap-6">
+        {onOpenAssistant && (
+          <button
+            type="button"
+            onClick={onOpenAssistant}
+            className="flex items-center gap-2 text-body-sm text-tertiary hover:text-primary transition-colors"
+          >
+            <span>Anna</span>
+            <kbd className="font-mono text-body-sm text-tertiary">⌘K</kbd>
+          </button>
         )}
-      </div>
-
-      {/* Search (visual only) */}
-      <div className="hidden md:flex items-center gap-2 h-9 rounded-lg border border-border-subtle bg-bg-tertiary px-3 w-64 text-[14px] text-text-tertiary">
-        <Search className="h-4 w-4 shrink-0" />
-        <span>Hledat…</span>
-      </div>
-
-      {/* Advisor avatar dropdown placeholder */}
-      <div className="flex items-center gap-3">
-        <div
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border-subtle bg-bg-tertiary text-[13px] font-medium text-text-secondary cursor-pointer"
-          title={advisor.full_name}
+        <button
+          type="button"
+          className="flex items-center gap-1.5 text-body text-primary"
+          title={advisor.email}
           aria-label={`Profil: ${advisor.full_name}`}
         >
-          {advisor.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={advisor.avatar_url}
-              alt={advisor.full_name}
-              className="h-full w-full rounded-full object-cover"
-            />
-          ) : (
-            initials
-          )}
-        </div>
+          <span>{advisor.full_name}</span>
+          <CaretDown size={14} weight="regular" />
+        </button>
       </div>
     </header>
   );

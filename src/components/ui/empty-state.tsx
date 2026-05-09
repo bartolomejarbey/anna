@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { type LucideIcon } from 'lucide-react';
+import type { Icon } from '@phosphor-icons/react';
 import { cn } from '@/lib/cn';
 import { Button } from './button';
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
+  icon?: Icon;
   heading: string;
   description?: string;
   action?: {
@@ -18,15 +18,11 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon: Icon, heading, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-24 text-center', className)}>
-      {Icon && (
-        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-border-subtle bg-bg-tertiary">
-          <Icon className="h-5 w-5 text-text-tertiary" />
-        </div>
-      )}
-      <h3 className="text-xl font-semibold text-text-primary">{heading}</h3>
+    <div className={cn('flex flex-col items-start py-16', className)}>
+      {Icon && <Icon size={32} weight="regular" className="mb-6 text-tertiary" />}
+      <h3 className="text-h2 text-primary">{heading}</h3>
       {description && (
-        <p className="mt-2 max-w-sm text-[15px] text-text-secondary">{description}</p>
+        <p className="mt-2 max-w-[44ch] text-body text-secondary">{description}</p>
       )}
       {action && (
         <div className="mt-8">

@@ -12,20 +12,16 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary:
-    'bg-accent text-bg-primary hover:bg-accent-hover',
-  secondary:
-    'border border-border-subtle bg-bg-primary text-text-primary hover:bg-bg-tertiary',
-  ghost:
-    'text-text-primary hover:bg-bg-tertiary',
-  danger:
-    'border border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)] text-error hover:bg-[color-mix(in_oklab,_var(--color-error)_8%,_transparent)]',
+  primary: 'bg-accent text-accent-text hover:opacity-90',
+  secondary: 'border border-border-default bg-transparent text-primary hover:bg-subtle',
+  ghost: 'text-primary hover:bg-subtle',
+  danger: 'border border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)] text-error hover:bg-error-bg',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  default: 'h-11 px-6 text-[15px]',
-  sm: 'h-9 px-4 text-sm',
-  icon: 'h-11 w-11',
+  default: 'h-10 px-4 text-body',
+  sm: 'h-8 px-3 text-body-sm',
+  icon: 'h-10 w-10',
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -34,11 +30,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center rounded-xl font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center rounded-[8px] font-medium transition-all focus:outline-none focus-visible:border-accent active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40',
           variantClasses[variant],
           sizeClasses[size],
           className,
         )}
+        style={{ transitionDuration: '150ms', transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
         {...props}
       >
         {children}

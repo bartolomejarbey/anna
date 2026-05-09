@@ -2,113 +2,98 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Sun,
-  Mic,
-  Users,
-  FileText,
-  User,
-  Mail,
-  Shield,
-  CalendarDays,
-  Inbox,
-  LayoutGrid,
-  BookOpen,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/cn';
 
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ElementType;
   quarter?: string;
 }
 
 const mainNav: NavItem[] = [
-  { label: 'Dnes', href: '/dashboard', icon: Sun },
-  { label: 'Schůzky', href: '/schuzky', icon: Mic },
-  { label: 'Zákazníci', href: '/zakaznici', icon: Users },
-  { label: 'Nabídky', href: '/nabidky', icon: FileText },
+  { label: 'Dnes', href: '/dashboard' },
+  { label: 'Schůzky', href: '/schuzky' },
+  { label: 'Zákazníci', href: '/zakaznici' },
+  { label: 'Nabídky', href: '/nabidky' },
 ];
 
 const settingsNav: NavItem[] = [
-  { label: 'Profil', href: '/profil', icon: User },
+  { label: 'Profil', href: '/profil' },
 ];
 
 const comingSoonNav: NavItem[] = [
-  { label: 'Newsletter', href: '/newsletter', icon: Mail, quarter: 'Q3 2026' },
-  { label: 'Pojištění', href: '/pojisteni', icon: Shield, quarter: 'Q2 2026' },
-  { label: 'Kalendář', href: '/kalendar', icon: CalendarDays, quarter: 'Q3 2026' },
-  { label: 'Inbox', href: '/inbox', icon: Inbox, quarter: 'Q3 2026' },
-  { label: 'CRM', href: '/crm', icon: LayoutGrid, quarter: 'Q4 2026' },
-  { label: 'Knowledge base', href: '/knowledge-base', icon: BookOpen, quarter: 'Q4 2026' },
+  { label: 'Newsletter', href: '/newsletter', quarter: 'Q3 2026' },
+  { label: 'Pojištění', href: '/pojisteni', quarter: 'Q2 2026' },
+  { label: 'Kalendář', href: '/kalendar', quarter: 'Q3 2026' },
+  { label: 'Inbox', href: '/inbox', quarter: 'Q3 2026' },
+  { label: 'CRM', href: '/crm', quarter: 'Q4 2026' },
+  { label: 'Knowledge base', href: '/knowledge-base', quarter: 'Q4 2026' },
 ];
 
 function NavLink({ item }: { item: NavItem }) {
   const pathname = usePathname();
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-  const Icon = item.icon;
 
   return (
     <Link
       href={item.href}
       className={cn(
-        'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-[15px] font-medium transition-colors',
+        'relative flex items-center justify-between gap-3 px-4 py-2 text-body transition-colors',
         isActive
-          ? 'bg-bg-tertiary text-text-primary'
-          : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary',
+          ? 'font-medium text-primary'
+          : 'text-secondary hover:bg-subtle hover:text-primary',
       )}
     >
-      <span className="flex items-center gap-3">
-        <Icon className="h-4 w-4 shrink-0" />
-        {item.label}
-      </span>
+      {isActive && (
+        <span
+          aria-hidden
+          className="absolute left-0 top-1 bottom-1 w-[2px] bg-accent"
+        />
+      )}
+      <span>{item.label}</span>
       {item.quarter && (
-        <Badge variant="quarter" className="text-[11px] shrink-0">
+        <span className="text-body-sm text-tertiary tabular-nums">
           {item.quarter}
-        </Badge>
+        </span>
       )}
     </Link>
   );
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-2 px-4 text-caption text-tertiary">{children}</p>
+  );
+}
+
 export function Sidebar() {
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-border-subtle bg-bg-primary px-4 py-6">
-      {/* Wordmark */}
-      <div className="mb-8 px-3">
-        <span className="text-xl font-semibold text-text-primary tracking-tight">Anna</span>
+    <aside className="flex h-full w-60 flex-col border-r border-border-subtle bg-canvas px-2 py-8">
+      <div className="mb-12 px-4">
+        <span
+          className="text-primary"
+          style={{ fontSize: 22, fontWeight: 500, letterSpacing: '-0.01em' }}
+        >
+          Anna
+        </span>
       </div>
 
-      {/* Main navigation */}
-      <nav className="flex flex-col gap-0.5">
-        <p className="mb-1 px-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">
-          Práce
-        </p>
+      <nav className="flex flex-col">
+        <SectionLabel>Práce</SectionLabel>
         {mainNav.map((item) => (
           <NavLink key={item.href} item={item} />
         ))}
       </nav>
 
-      {/* Settings navigation */}
-      <nav className="mt-6 flex flex-col gap-0.5">
-        <p className="mb-1 px-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">
-          Nastavení
-        </p>
+      <nav className="mt-8 flex flex-col">
+        <SectionLabel>Nastavení</SectionLabel>
         {settingsNav.map((item) => (
           <NavLink key={item.href} item={item} />
         ))}
       </nav>
 
-      {/* Separator */}
-      <div className="my-6 h-px bg-border-subtle" />
-
-      {/* Coming soon navigation */}
-      <nav className="flex flex-col gap-0.5">
-        <p className="mb-1 px-3 text-xs font-medium text-text-tertiary uppercase tracking-wider">
-          Brzy
-        </p>
+      <nav className="mt-8 flex flex-col">
+        <SectionLabel>Brzy</SectionLabel>
         {comingSoonNav.map((item) => (
           <NavLink key={item.href} item={item} />
         ))}

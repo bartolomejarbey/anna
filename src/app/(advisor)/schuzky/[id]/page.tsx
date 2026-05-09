@@ -1,3 +1,4 @@
+import { Microphone } from '@phosphor-icons/react/dist/ssr';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { getMeetingFull, retryPipeline } from '@/lib/actions/meetings';
 import { MeetingStatusPill } from '@/components/meeting-status-pill';
@@ -7,9 +8,7 @@ import { ExtractionEditor } from '@/components/extraction-editor';
 import { OfferPreview } from '@/components/offer-preview';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Card } from '@/components/ui/card';
-import { Mic } from 'lucide-react';
 
-// Pipeline statuses that are actively mid-run
 const IN_PROGRESS_STATUSES = new Set([
   'transcribing',
   'reconciling',
@@ -33,27 +32,23 @@ export default async function MeetingDetailPage({
     dbUnavailable = true;
   }
 
-  // DB not available yet
   if (dbUnavailable) {
     return (
-      <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
+      <div className="mx-auto w-full max-w-[960px] px-8 py-16">
         <EmptyState
-          icon={Mic}
-          heading="Data se zobrazí po napojení na databázi"
-          description="Připojení k databázi ještě nebylo nakonfigurováno. Zkuste to znovu po nastavení prostředí."
+          icon={Microphone}
+          heading="Data se zobrazí po napojení na databázi."
         />
       </div>
     );
   }
 
-  // Meeting not found
   if (!meeting) {
     return (
-      <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
+      <div className="mx-auto w-full max-w-[960px] px-8 py-16">
         <EmptyState
-          icon={Mic}
-          heading="Schůzka nenalezena"
-          description="Tato schůzka neexistuje nebo nemáte přístup k jejím datům."
+          icon={Microphone}
+          heading="Schůzka nenalezena."
           action={{ label: 'Zpět na schůzky', href: '/schuzky' }}
         />
       </div>
@@ -64,7 +59,6 @@ export default async function MeetingDetailPage({
   const isPipeline = IN_PROGRESS_STATUSES.has(status);
   const customerName = meeting.customer?.full_name ?? 'Zákazník';
 
-  // Signed URL for audio playback (server-rendered)
   let audioSignedUrl: string | null = null;
   if (meeting.audio_url) {
     try {
@@ -73,7 +67,7 @@ export default async function MeetingDetailPage({
         .createSignedUrl(meeting.audio_url, 3600);
       audioSignedUrl = data?.signedUrl ?? null;
     } catch {
-      // Non-fatal — audio player just won't show
+      // Non-fatal
     }
   }
 
@@ -87,29 +81,27 @@ export default async function MeetingDetailPage({
   });
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-8 py-12">
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="mb-10 flex items-start justify-between gap-4">
+    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <div className="mb-12 flex items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-4xl font-semibold text-text-primary">{customerName}</h1>
-          <p className="text-[15px] text-text-secondary">{formattedDate}</p>
+          <h1 className="text-h1 text-primary">{customerName}</h1>
+          <p className="text-body-sm text-tertiary">{formattedDate}</p>
         </div>
         <div className="mt-1">
           <MeetingStatusPill status={status} />
         </div>
       </div>
 
-      {/* ── Failed state ─────────────────────────────────────────────────────── */}
       {status === 'failed' && (
         <Card variant="compact" className="mb-8 border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)]">
-          <p className="text-[15px] font-medium text-error mb-2">Zpracování selhalo</p>
-          <p className="text-[13px] text-text-secondary mb-4">
-            Pipeline pro tuto schůzku skončil chybou. Zkuste ji spustit znovu.
+          <p className="text-body font-medium text-error mb-2">Zpracování selhalo</p>
+          <p className="text-body-sm text-secondary mb-4">
+            Pipeline pro tuto schůzku skončil chybou.
           </p>
           <form action={retryPipeline.bind(null, id)}>
             <button
               type="submit"
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-border-subtle bg-bg-primary px-6 text-[15px] font-medium text-text-primary transition-colors hover:bg-bg-tertiary"
+              className="inline-flex h-10 items-center justify-center rounded-[8px] border border-border-default bg-transparent px-4 text-body font-medium text-primary transition-colors hover:bg-subtle active:scale-[0.98]"
             >
               Spustit znovu
             </button>
@@ -117,28 +109,25 @@ export default async function MeetingDetailPage({
         </Card>
       )}
 
-      {/* ── Pipeline progress notice ──────────────────────────────────────────── */}
       {isPipeline && (
-        <Card variant="compact" className="mb-8">
-          <p className="text-[15px] text-text-secondary">
-            Schůzka se právě zpracovává — výsledky se zobrazí automaticky po dokončení.
-          </p>
-        </Card>
+        <div className="mb-8">
+          <p className="text-body text-secondary mb-3">Zpracovává se</p>
+          <div className="flex flex-col gap-2">
+            <div className="skeleton h-3 w-full" />
+            <div className="skeleton h-3 w-4/5" />
+            <div className="skeleton h-3 w-3/5" />
+          </div>
+        </div>
       )}
 
-      {/* ── Audio player ─────────────────────────────────────────────────────── */}
       {audioSignedUrl && (
         <Card variant="compact" className="mb-8">
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-text-tertiary">
-            Nahrávka
-          </p>
+          <p className="mb-3 text-caption text-tertiary">Nahrávka</p>
           <audio controls src={audioSignedUrl} className="w-full" />
         </Card>
       )}
 
-      {/* ── Content sections ─────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-8">
-        {/* Transcript */}
         {(meeting.transcript || isPipeline) && (
           <TranscriptViewer
             text={meeting.transcript?.text ?? ''}
@@ -146,25 +135,18 @@ export default async function MeetingDetailPage({
           />
         )}
 
-        {/* Extraction */}
         {meeting.extraction && (
           <ExtractionEditor data={meeting.extraction.structured_data} />
         )}
 
-        {/* Offer PDF preview */}
         {meeting.offer?.pdf_url && (
-          <OfferPreview
-            pdfUrl={meeting.offer.pdf_url}
-            customerName={customerName}
-          />
+          <OfferPreview pdfUrl={meeting.offer.pdf_url} customerName={customerName} />
         )}
 
-        {/* Empty state when nothing to show yet */}
         {!meeting.transcript && !meeting.extraction && !meeting.offer && !isPipeline && status !== 'failed' && (
           <EmptyState
-            icon={Mic}
-            heading="Schůzka ještě nebyla zpracována"
-            description="Po nahrání audia spusťte pipeline pro přepis a vytvoření nabídky."
+            icon={Microphone}
+            heading="Schůzka ještě nebyla zpracována."
           />
         )}
       </div>

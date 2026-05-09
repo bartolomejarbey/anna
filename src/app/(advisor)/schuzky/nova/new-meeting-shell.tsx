@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -17,8 +15,6 @@ import { AudioUploader } from '@/components/audio-uploader';
 import { createMeeting, uploadAudioForm, runFullPipeline } from '@/lib/actions/meetings';
 import { appendLiveTranscript } from '@/lib/actions/transcription';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface CustomerOption {
   id: string;
   full_name: string;
@@ -28,253 +24,183 @@ interface NewMeetingShellProps {
   customers: CustomerOption[];
 }
 
-type PipelineStep =
-  | 'idle'
-  | 'creating'
-  | 'uploading'
-  | 'transcribing'
-  | 'extracting'
-  | 'generating'
-  | 'done'
-  | 'error';
+interface Capture {
+  blob: Blob;
+  transcript: string;
+  method: 'browser_live' | 'file_upload';
+  durationSec: number;
+}
 
-const STEP_LABELS: Record<PipelineStep, string> = {
-  idle: '',
-  creating: 'Vytváříme schůzku…',
-  uploading: 'Nahrávám audio…',
-  transcribing: 'Přepisuji zvuk (Whisper)…',
-  extracting: 'Vytahuji data…',
-  generating: 'Vytvářím PDF nabídku…',
-  done: 'Hotovo!',
-  error: 'Chyba při zpracování.',
+type ProcessStep = 'creating' | 'uploading' | 'transcribing' | 'extracting' | 'generating';
+
+const STEP_LABELS: Record<ProcessStep, string> = {
+  creating: 'Připravuji schůzku',
+  uploading: 'Nahrávám zvuk',
+  transcribing: 'Přepisuji',
+  extracting: 'Vytahuji data',
+  generating: 'Generuji nabídku',
 };
-
-type CaptureTab = 'live' | 'upload';
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function NewMeetingShell({ customers }: NewMeetingShellProps): React.ReactElement {
   const router = useRouter();
 
+  const [capture, setCapture] = useState<Capture | null>(null);
+  const [showFileUpload, setShowFileUpload] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const [captureTab, setCaptureTab] = useState<CaptureTab>('live');
-  const [meetingId, setMeetingId] = useState<string | null>(null);
-  const [pipelineStep, setPipelineStep] = useState<PipelineStep>('idle');
+  const [processStep, setProcessStep] = useState<ProcessStep | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Debounce ref for live transcript
-  const liveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleRecorderStop = useCallback((blob: Blob, transcript: string) => {
+    setCapture({ blob, transcript, method: 'browser_live', durationSec: 0 });
+  }, []);
 
-  const isProcessing = pipelineStep !== 'idle' && pipelineStep !== 'error';
-  const canCapture = selectedCustomerId !== null && !isProcessing;
+  const handleFileUpload = useCallback((file: File) => {
+    setCapture({ blob: file, transcript: '', method: 'file_upload', durationSec: 0 });
+    setShowFileUpload(false);
+  }, []);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  const handleDiscard = useCallback(() => {
+    setCapture(null);
+    setSelectedCustomerId(null);
+    setProcessStep(null);
+    setErrorMessage(null);
+  }, []);
 
-  async function ensureMeetingId(captureMethod: 'browser_live' | 'file_upload'): Promise<string> {
-    if (meetingId) return meetingId;
+  const handleContinue = useCallback(async () => {
+    if (!capture || !selectedCustomerId) return;
+    setErrorMessage(null);
 
-    setPipelineStep('creating');
-    const { meetingId: id } = await createMeeting({
-      customerId: selectedCustomerId!,
-      captureMethod,
-    });
-    setMeetingId(id);
-    return id;
-  }
-
-  async function runPipeline(id: string, liveTranscript?: string): Promise<void> {
     try {
-      setPipelineStep('transcribing');
-      await runFullPipeline({ meetingId: id, liveTranscriptText: liveTranscript });
-      setPipelineStep('done');
-      router.push(`/schuzky/${id}`);
+      setProcessStep('creating');
+      const { meetingId } = await createMeeting({
+        customerId: selectedCustomerId,
+        captureMethod: capture.method,
+      });
+
+      setProcessStep('uploading');
+      const formData = new FormData();
+      formData.append('meetingId', meetingId);
+      formData.append('file', capture.blob);
+      formData.append('mimeType', capture.blob.type || 'audio/mp4');
+      await uploadAudioForm(formData);
+
+      if (capture.transcript) {
+        await appendLiveTranscript(meetingId, capture.transcript);
+      }
+
+      setProcessStep('transcribing');
+      await runFullPipeline({
+        meetingId,
+        liveTranscriptText: capture.transcript || undefined,
+      });
+
+      router.push(`/schuzky/${meetingId}`);
     } catch (err) {
-      setPipelineStep('error');
+      setProcessStep(null);
       setErrorMessage(
-        err instanceof Error ? err.message : 'Neznámá chyba — zkuste to znovu.',
+        err instanceof Error ? err.message : 'Něco se nepovedlo. Zkuste to prosím znovu.',
       );
     }
+  }, [capture, selectedCustomerId, router]);
+
+  // ── Processing ────────────────────────────────────────────────────────────
+  if (processStep) {
+    return (
+      <div className="flex flex-col gap-6 max-w-md">
+        <p className="text-body text-secondary">{STEP_LABELS[processStep]}</p>
+        <div className="flex flex-col gap-3">
+          <div className="skeleton h-2 w-full" />
+          <div className="skeleton h-2 w-4/5" />
+          <div className="skeleton h-2 w-3/5" />
+        </div>
+      </div>
+    );
   }
 
-  // ── Live transcript callback (debounced 1 s) ─────────────────────────────
-
-  const handleLiveTranscript = useCallback(
-    (text: string) => {
-      if (!meetingId) return;
-      if (liveDebounceRef.current) clearTimeout(liveDebounceRef.current);
-      liveDebounceRef.current = setTimeout(() => {
-        void appendLiveTranscript(meetingId, text);
-      }, 1000);
-    },
-    [meetingId],
-  );
-
-  // ── LiveRecorder stop ────────────────────────────────────────────────────
-
-  const handleLiveStop = useCallback(
-    async (audioBlob: Blob, fullLiveTranscript: string) => {
-      try {
-        const id = await ensureMeetingId('browser_live');
-
-        setPipelineStep('uploading');
-        const formData = new FormData();
-        formData.append('meetingId', id);
-        formData.append('file', audioBlob);
-        formData.append('mimeType', audioBlob.type || 'audio/mp4');
-        await uploadAudioForm(formData);
-
-        await runPipeline(id, fullLiveTranscript || undefined);
-      } catch (err) {
-        setPipelineStep('error');
-        setErrorMessage(
-          err instanceof Error ? err.message : 'Neznámá chyba — zkuste to znovu.',
-        );
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [meetingId, selectedCustomerId],
-  );
-
-  // ── AudioUploader drop ───────────────────────────────────────────────────
-
-  const handleFileUpload = useCallback(
-    async (file: File) => {
-      try {
-        const id = await ensureMeetingId('file_upload');
-
-        setPipelineStep('uploading');
-        const formData = new FormData();
-        formData.append('meetingId', id);
-        formData.append('file', file);
-        formData.append('mimeType', file.type || 'audio/mp4');
-        await uploadAudioForm(formData);
-
-        await runPipeline(id);
-      } catch (err) {
-        setPipelineStep('error');
-        setErrorMessage(
-          err instanceof Error ? err.message : 'Neznámá chyba — zkuste to znovu.',
-        );
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [meetingId, selectedCustomerId],
-  );
-
-  // ── Render ───────────────────────────────────────────────────────────────
-
-  return (
-    <div className="flex flex-col gap-8 max-w-2xl">
-      {/* Step 1: Customer select */}
-      <Card variant="compact">
-        <h2 className="text-lg font-semibold text-text-primary mb-5">
-          Zákazník
-        </h2>
-
-        {customers.length === 0 ? (
-          <p className="text-[15px] text-text-secondary">
-            Data se zobrazí po napojení na databázi.
-          </p>
-        ) : (
-          <Select
-            value={selectedCustomerId ?? ''}
-            onValueChange={(val) => setSelectedCustomerId(val)}
-            disabled={isProcessing}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Vyberte zákazníka…" />
-            </SelectTrigger>
-            <SelectContent>
-              {customers.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </Card>
-
-      {/* Step 2: Capture method tabs */}
-      <Card
-        variant="compact"
-        className={cn(!canCapture && 'opacity-50 pointer-events-none')}
-      >
-        <h2 className="text-lg font-semibold text-text-primary mb-5">
-          Způsob nahrávání
-        </h2>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {(['live', 'upload'] as CaptureTab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setCaptureTab(tab)}
-              disabled={!canCapture}
-              className={cn(
-                'px-4 py-2 rounded-xl text-[15px] font-medium transition-colors border',
-                captureTab === tab
-                  ? 'bg-accent text-bg-primary border-accent'
-                  : 'bg-bg-primary text-text-secondary border-border-subtle hover:bg-bg-tertiary',
-              )}
+  // ── Review (capture done, picking customer) ───────────────────────────────
+  if (capture) {
+    const noCustomers = customers.length === 0;
+    return (
+      <div className="flex flex-col gap-10 max-w-md">
+        <div className="flex flex-col gap-3">
+          <p className="text-caption text-tertiary">Zákazník</p>
+          {noCustomers ? (
+            <p className="text-body text-secondary">
+              Data se zobrazí po napojení na databázi.
+            </p>
+          ) : (
+            <Select
+              value={selectedCustomerId ?? ''}
+              onValueChange={setSelectedCustomerId}
             >
-              {tab === 'live' ? 'Nahrát teď ze schůzky' : 'Nahrát soubor'}
-            </button>
-          ))}
+              <SelectTrigger>
+                <SelectValue placeholder="Vyberte zákazníka" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
-        {/* Tab content */}
-        {captureTab === 'live' ? (
-          <LiveRecorder
-            meetingId={meetingId ?? ''}
-            onLiveTranscript={handleLiveTranscript}
-            onStop={handleLiveStop}
-            disabled={!canCapture}
-          />
-        ) : (
-          <AudioUploader
-            meetingId={meetingId ?? ''}
-            onUpload={handleFileUpload}
-            disabled={!canCapture}
-          />
+        {errorMessage && (
+          <p className="text-body-sm text-error">{errorMessage}</p>
         )}
-      </Card>
 
-      {/* Pipeline status */}
-      {pipelineStep !== 'idle' && (
-        <div
-          className={cn(
-            'rounded-xl border px-6 py-4',
-            pipelineStep === 'error'
-              ? 'border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)] bg-[color-mix(in_oklab,_var(--color-error)_8%,_transparent)]'
-              : 'border-border-subtle bg-bg-tertiary',
-          )}
-        >
-          <p
+        <div className="flex items-center gap-6">
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={!selectedCustomerId || noCustomers}
             className={cn(
-              'text-[15px] font-medium',
-              pipelineStep === 'error' ? 'text-error' : 'text-text-primary',
+              'h-10 px-4 rounded-[8px] bg-accent text-accent-text text-body font-medium',
+              'transition-opacity active:scale-[0.98] hover:opacity-90',
+              'disabled:opacity-40 disabled:cursor-not-allowed',
             )}
+            style={{ transitionDuration: '150ms', transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)' }}
           >
-            {STEP_LABELS[pipelineStep]}
-          </p>
-          {pipelineStep === 'error' && errorMessage && (
-            <p className="mt-1 text-[13px] text-text-secondary">{errorMessage}</p>
-          )}
-          {pipelineStep === 'error' && (
-            <Button
-              variant="secondary"
-              size="sm"
-              className="mt-4"
-              onClick={() => {
-                setPipelineStep('idle');
-                setErrorMessage(null);
-              }}
-            >
-              Zkusit znovu
-            </Button>
-          )}
+            Pokračovat
+          </button>
+          <button
+            type="button"
+            onClick={handleDiscard}
+            className="text-body-sm text-tertiary hover:text-primary transition-colors"
+          >
+            Zahodit
+          </button>
         </div>
+      </div>
+    );
+  }
+
+  // ── Idle (recorder + secondary file upload) ───────────────────────────────
+  return (
+    <div className="flex flex-col items-center gap-16 py-12">
+      <LiveRecorder onStop={handleRecorderStop} />
+
+      {showFileUpload ? (
+        <div className="w-full max-w-md flex flex-col gap-4">
+          <AudioUploader meetingId="" onUpload={handleFileUpload} />
+          <button
+            type="button"
+            onClick={() => setShowFileUpload(false)}
+            className="text-body-sm text-tertiary hover:text-primary transition-colors self-start"
+          >
+            Zrušit
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowFileUpload(true)}
+          className="text-body-sm text-tertiary hover:text-primary transition-colors"
+        >
+          nebo nahrát soubor
+        </button>
       )}
     </div>
   );
