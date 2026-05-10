@@ -74,20 +74,20 @@
 
 @utility text-hero-serif {
   font-family: var(--font-serif);
-  font-style: italic;
+  font-style: normal;
   font-weight: 400;
-  font-size: 84px;
-  line-height: 1.0;
-  letter-spacing: -0.025em;
+  font-size: 72px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 @utility text-h1 {
   font-family: var(--font-serif);
-  font-style: italic;
+  font-style: normal;
   font-weight: 400;
   font-size: 48px;
-  line-height: 1.05;
-  letter-spacing: -0.018em;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
 }
 
 @utility text-h2 {
