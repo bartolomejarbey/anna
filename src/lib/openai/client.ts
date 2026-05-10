@@ -19,6 +19,7 @@ export function openai(): OpenAI {
 export const MODEL = {
   whisper: "whisper-1",
   reconcile: "gpt-4o-mini",
+  cleanup: "gpt-4o-mini",
   extraction: "gpt-4o",
   assistant: "gpt-4o-mini",
 } as const;

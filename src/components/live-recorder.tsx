@@ -38,14 +38,10 @@ export function LiveRecorder({ onStop, disabled = false }: LiveRecorderProps): R
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const transcriptRef = useRef('');
+  const finalTranscriptRef = useRef('');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRecordingRef = useRef(false);
-
-  useEffect(() => {
-    transcriptRef.current = transcript;
-  }, [transcript]);
 
   useEffect(() => {
     return () => {
@@ -71,19 +67,24 @@ export function LiveRecorder({ onStop, disabled = false }: LiveRecorderProps): R
     const RecognitionClass = window.webkitSpeechRecognition;
     const recognition = new RecognitionClass();
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.lang = 'cs-CZ';
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let newText = '';
+      let interim = '';
+      let newFinal = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        if (result.isFinal) newText += result[0].transcript + ' ';
+        if (result.isFinal) {
+          newFinal += result[0].transcript + ' ';
+        } else {
+          interim += result[0].transcript;
+        }
       }
-      if (newText.trim()) {
-        const updated = (transcriptRef.current + newText).trimStart();
-        setTranscript(updated);
+      if (newFinal) {
+        finalTranscriptRef.current = (finalTranscriptRef.current + newFinal).trimStart();
       }
+      setTranscript((finalTranscriptRef.current + interim).trim());
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -116,7 +117,7 @@ export function LiveRecorder({ onStop, disabled = false }: LiveRecorderProps): R
     if (disabled) return;
     setMicError(null);
     setTranscript('');
-    transcriptRef.current = '';
+    finalTranscriptRef.current = '';
 
     let stream: MediaStream;
     try {
@@ -160,7 +161,7 @@ export function LiveRecorder({ onStop, disabled = false }: LiveRecorderProps): R
     recorder.onstop = () => {
       const mimeType = recorder.mimeType || 'audio/mp4';
       const blob = new Blob(chunksRef.current, { type: mimeType });
-      const finalTranscript = transcriptRef.current;
+      const finalTranscript = finalTranscriptRef.current;
 
       setState('idle');
       setElapsed(0);
@@ -214,9 +215,16 @@ export function LiveRecorder({ onStop, disabled = false }: LiveRecorderProps): R
           ) : null}
         </div>
       ) : (
-        <p className="text-body-sm text-tertiary">
-          {micError ?? 'Klikni a začni mluvit'}
-        </p>
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-body-sm text-tertiary">
+            {micError ?? 'Klikni a začni mluvit'}
+          </p>
+          {!speechSupported && !micError && (
+            <p className="text-body-sm text-tertiary text-center max-w-[420px]">
+              Tvůj prohlížeč nepodporuje živý přepis. Po nahrání spustí Whisper transkripci.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

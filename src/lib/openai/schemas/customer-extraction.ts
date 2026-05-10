@@ -140,6 +140,92 @@ const goalsBlockSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Meeting facts block — fakta která zákazník/poradce skutečně řekli a která
+// kalkulátor zajištění (EFA) potřebuje. Policy-level konstanty (korekce, roky,
+// výnosy) doplňuje adapter z `EFA_DEFAULTS` — sem patří jen co zaznělo.
+//
+// `employment_type` se musí zarovnat s `EmploymentType` v
+// `src/lib/calculator/types.ts` ("employee" | "selfemployed").
+// ---------------------------------------------------------------------------
+
+const meetingFactsBlockSchema = z.object({
+  employment_type: z
+    .enum(["employee", "selfemployed"])
+    .nullable()
+    .describe(
+      "Typ příjmu klienta. 'employee' = zaměstnanec (mzda, HPP, DPP). 'selfemployed' = OSVČ / podnikatel. null pokud nezaznělo.",
+    ),
+  gross_monthly_income_czk: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe(
+      "Hrubý měsíční příjem klienta v Kč (před zdaněním / před odečtením odvodů). null pokud zákazník zmínil jen čistý příjem nebo nezmínil vůbec.",
+    ),
+  has_partner: z
+    .boolean()
+    .describe(
+      "true pokud zákazník žije s partnerem/manželem (sdílená domácnost), false jinak. Vždy bool, nikdy null — pokud chybí signál, vrať false.",
+    ),
+  partner_employment_type: z
+    .enum(["employee", "selfemployed"])
+    .nullable()
+    .describe(
+      "Typ příjmu partnera. null pokud has_partner=false nebo partner nepracuje (např. mateřská) nebo nezaznělo.",
+    ),
+  partner_gross_monthly_income_czk: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe(
+      "Hrubý měsíční příjem partnera v Kč. null pokud has_partner=false, partner nepracuje, nebo nezaznělo.",
+    ),
+  current_savings_czk: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe(
+      "Aktuální úspory na důchod / dlouhodobé spoření v Kč (penzijko, DIP, investiční portfolio). Likvidní rezerva NA ÚČTU patří do finances.existing_savings_czk, ne sem. null pokud nezaznělo.",
+    ),
+  rent_passive_czk: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe(
+      "Měsíční pasivní příjem z pronájmu nemovitostí v Kč (nájem, ne aktivní podnikání). null pokud klient nemá pronájem nebo nezaznělo.",
+    ),
+  monthly_mortgage_czk: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe(
+      "Měsíční splátka hypotéky v Kč. Duplikuje finances.monthly_mortgage_czk pro adapter — vyplň stejnou hodnotu pokud zaznělo, jinak null.",
+    ),
+  desired_retirement_age: z
+    .number()
+    .int()
+    .min(50)
+    .max(80)
+    .nullable()
+    .describe(
+      "Věk, ve kterém chce klient odejít do důchodu (např. 'chci skončit v šedesáti'). null pokud nezaznělo.",
+    ),
+  desired_retirement_monthly_czk: z
+    .number()
+    .int()
+    .min(0)
+    .nullable()
+    .describe(
+      "Cílová měsíční renta v důchodu v Kč (např. 'chtěl bych mít čtyřicet tisíc'). null pokud nezaznělo.",
+    ),
+});
+
+// ---------------------------------------------------------------------------
 // Top-level extraction schema.
 // ---------------------------------------------------------------------------
 
@@ -147,6 +233,7 @@ export const customerExtractionSchema = z.object({
   customer: customerBlockSchema,
   finances: financesBlockSchema,
   goals: goalsBlockSchema,
+  meeting_facts: meetingFactsBlockSchema,
   notes: z
     .string()
     .describe(

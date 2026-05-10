@@ -19,7 +19,7 @@ import {
  *     analytics_events for prompt iteration).
  */
 
-const PROMPT_VERSION = "extraction-v1";
+const PROMPT_VERSION = "extraction-v2";
 
 const SYSTEM_PROMPT = `Jsi asistent finančního poradce v České republice. Z přepisu akviziční schůzky mezi poradcem a zákazníkem (koncovým spotřebitelem finančních produktů) extrahuj přesně strukturovaná data o zákazníkovi.
 
@@ -54,6 +54,17 @@ Tvrdá pravidla:
 
 7. occupation: krátká fráze (povolání nebo obor), např. "IT specialista", "učitelka ZŠ", "OSVČ grafička". Ne celá věta.
 
+8. meeting_facts — fakta pro kalkulátor zajištění (EFA). Vyplň jen co zaznělo:
+   - employment_type: "employee" pokud zákazník mluví o mzdě/zaměstnavateli/HPP, "selfemployed" pokud OSVČ/podnikatel/IČO/živnostník. Jinak null.
+   - gross_monthly_income_czk: hrubý příjem (zaznělo-li explicitně "hrubého" / "před zdaněním"). Jinak null. Čistý příjem patří do finances.monthly_income_czk, NE sem.
+   - has_partner: true pokud klient žije s partnerem/manželkou/manželem (sdílená domácnost). Jinak false. Tohle je BOOL, ne null — pokud nezaznělo nic, vrať false.
+   - partner_employment_type / partner_gross_monthly_income_czk: jen pokud has_partner=true A partner pracuje A jeho typ/příjem zazněl. Pokud je partnerka doma s dětmi nebo nepracuje, vrať null.
+   - current_savings_czk: úspory/penzijko/investice směřované na důchod. Likvidní rezerva na běžném účtu sem NEpatří (ta je ve finances.existing_savings_czk).
+   - rent_passive_czk: jen pokud klient zmínil pronájem nemovitosti.
+   - monthly_mortgage_czk: stejná hodnota jako finances.monthly_mortgage_czk pokud zaznělo, jinak null.
+   - desired_retirement_age: explicitně řečený věk (např. "chci skončit v šedesáti pěti" → 65).
+   - desired_retirement_monthly_czk: cílová měsíční renta (např. "chtěl bych v důchodu mít aspoň čtyřicet tisíc" → 40000).
+
 Výstup pošli výhradně podle dodaného JSON schématu (Structured Outputs).`;
 
 // Few-shot examples — drive Czech-specific behaviour (number normalization,
@@ -81,6 +92,18 @@ const FEWSHOT_ASSISTANT_1 = JSON.stringify({
     primary_goal: "Pořízení vlastního bytu, horizont 5 let",
     target_horizon_years: 5,
     risk_appetite: "high",
+  },
+  meeting_facts: {
+    employment_type: "employee",
+    gross_monthly_income_czk: null,
+    has_partner: false,
+    partner_employment_type: null,
+    partner_gross_monthly_income_czk: null,
+    current_savings_czk: null,
+    rent_passive_czk: null,
+    monthly_mortgage_czk: null,
+    desired_retirement_age: null,
+    desired_retirement_monthly_czk: null,
   },
   notes:
     "Klient je v investicích nový, projevuje zájem o ETF. Aktuálně bez pojištění a bez pravidelného spoření.",
@@ -110,6 +133,18 @@ const FEWSHOT_ASSISTANT_2 = JSON.stringify({
       "Zajištění rodiny pro případ výpadku příjmu živitele, ochrana hypotéky",
     target_horizon_years: null,
     risk_appetite: null,
+  },
+  meeting_facts: {
+    employment_type: "employee",
+    gross_monthly_income_czk: null,
+    has_partner: true,
+    partner_employment_type: null,
+    partner_gross_monthly_income_czk: null,
+    current_savings_czk: null,
+    rent_passive_czk: null,
+    monthly_mortgage_czk: 23000,
+    desired_retirement_age: null,
+    desired_retirement_monthly_czk: null,
   },
   notes:
     "Manželka je aktuálně doma s mladší dcerou bez vlastního příjmu. Prioritou je životní pojištění živitele.",

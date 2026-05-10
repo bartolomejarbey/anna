@@ -12,7 +12,11 @@ import {
 } from '@/components/ui/select';
 import { LiveRecorder } from '@/components/live-recorder';
 import { AudioUploader } from '@/components/audio-uploader';
-import { createMeeting, uploadAudioForm, runFullPipeline } from '@/lib/actions/meetings';
+import {
+  createMeeting,
+  uploadAudioForm,
+  runFullPipeline,
+} from '@/lib/actions/meetings';
 import { appendLiveTranscript } from '@/lib/actions/transcription';
 
 interface CustomerOption {
@@ -28,41 +32,43 @@ interface Capture {
   blob: Blob;
   transcript: string;
   method: 'browser_live' | 'file_upload';
-  durationSec: number;
 }
 
-type ProcessStep = 'creating' | 'uploading' | 'transcribing' | 'extracting' | 'generating';
+type Mode = 'live' | 'file';
+type ProcessStep = 'creating' | 'uploading' | 'processing';
 
 const STEP_LABELS: Record<ProcessStep, string> = {
   creating: 'Připravuji schůzku',
   uploading: 'Nahrávám zvuk',
-  transcribing: 'Přepisuji',
-  extracting: 'Vytahuji data',
-  generating: 'Generuji nabídku',
+  processing: 'Anna zpracovává nahrávku',
 };
 
-export function NewMeetingShell({ customers }: NewMeetingShellProps): React.ReactElement {
+export function NewMeetingShell({
+  customers,
+}: NewMeetingShellProps): React.ReactElement {
   const router = useRouter();
 
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
+    null,
+  );
+  const [mode, setMode] = useState<Mode>('live');
   const [capture, setCapture] = useState<Capture | null>(null);
-  const [showFileUpload, setShowFileUpload] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [processStep, setProcessStep] = useState<ProcessStep | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleRecorderStop = useCallback((blob: Blob, transcript: string) => {
-    setCapture({ blob, transcript, method: 'browser_live', durationSec: 0 });
-  }, []);
+  const handleRecorderStop = useCallback(
+    (blob: Blob, transcript: string) => {
+      setCapture({ blob, transcript, method: 'browser_live' });
+    },
+    [],
+  );
 
   const handleFileUpload = useCallback((file: File) => {
-    setCapture({ blob: file, transcript: '', method: 'file_upload', durationSec: 0 });
-    setShowFileUpload(false);
+    setCapture({ blob: file, transcript: '', method: 'file_upload' });
   }, []);
 
   const handleDiscard = useCallback(() => {
     setCapture(null);
-    setSelectedCustomerId(null);
-    setProcessStep(null);
     setErrorMessage(null);
   }, []);
 
@@ -88,7 +94,7 @@ export function NewMeetingShell({ customers }: NewMeetingShellProps): React.Reac
         await appendLiveTranscript(meetingId, capture.transcript);
       }
 
-      setProcessStep('transcribing');
+      setProcessStep('processing');
       await runFullPipeline({
         meetingId,
         liveTranscriptText: capture.transcript || undefined,
@@ -98,15 +104,17 @@ export function NewMeetingShell({ customers }: NewMeetingShellProps): React.Reac
     } catch (err) {
       setProcessStep(null);
       setErrorMessage(
-        err instanceof Error ? err.message : 'Něco se nepovedlo. Zkuste to prosím znovu.',
+        err instanceof Error
+          ? err.message
+          : 'Něco se nepovedlo. Zkuste to prosím znovu.',
       );
     }
   }, [capture, selectedCustomerId, router]);
 
-  // ── Processing ────────────────────────────────────────────────────────────
+  // ── Processing ──────────────────────────────────────────────────────────────
   if (processStep) {
     return (
-      <div className="flex flex-col gap-6 max-w-md">
+      <div className="flex max-w-md flex-col gap-6">
         <p className="text-body text-secondary">{STEP_LABELS[processStep]}</p>
         <div className="flex flex-col gap-3">
           <div className="skeleton h-2 w-full" />
@@ -117,90 +125,127 @@ export function NewMeetingShell({ customers }: NewMeetingShellProps): React.Reac
     );
   }
 
-  // ── Review (capture done, picking customer) ───────────────────────────────
-  if (capture) {
-    const noCustomers = customers.length === 0;
-    return (
-      <div className="flex flex-col gap-10 max-w-md">
-        <div className="flex flex-col gap-3">
-          <p className="text-caption text-tertiary">Zákazník</p>
-          {noCustomers ? (
-            <p className="text-body text-secondary">
-              Data se zobrazí po napojení na databázi.
-            </p>
-          ) : (
-            <Select
-              value={selectedCustomerId ?? ''}
-              onValueChange={setSelectedCustomerId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Vyberte zákazníka" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
+  const noCustomers = customers.length === 0;
+  const customerChosen = !!selectedCustomerId;
 
-        {errorMessage && (
-          <p className="text-body-sm text-error">{errorMessage}</p>
-        )}
-
-        <div className="flex items-center gap-6">
-          <button
-            type="button"
-            onClick={handleContinue}
-            disabled={!selectedCustomerId || noCustomers}
-            className={cn(
-              'h-10 px-4 rounded-[8px] bg-accent text-accent-text text-body font-medium',
-              'transition-opacity active:scale-[0.98] hover:opacity-90',
-              'disabled:opacity-40 disabled:cursor-not-allowed',
-            )}
-            style={{ transitionDuration: '150ms', transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)' }}
-          >
-            Pokračovat
-          </button>
-          <button
-            type="button"
-            onClick={handleDiscard}
-            className="text-body-sm text-tertiary hover:text-primary transition-colors"
-          >
-            Zahodit
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Idle (recorder + secondary file upload) ───────────────────────────────
   return (
-    <div className="flex flex-col items-center gap-16 py-12">
-      <LiveRecorder onStop={handleRecorderStop} />
-
-      {showFileUpload ? (
-        <div className="w-full max-w-md flex flex-col gap-4">
-          <AudioUploader meetingId="" onUpload={handleFileUpload} />
-          <button
-            type="button"
-            onClick={() => setShowFileUpload(false)}
-            className="text-body-sm text-tertiary hover:text-primary transition-colors self-start"
+    <div className="flex flex-col gap-12">
+      {/* Krok 1 — Zákazník */}
+      <section className="flex max-w-md flex-col gap-3">
+        <p className="text-caption text-tertiary">1 · Zákazník</p>
+        {noCustomers ? (
+          <p className="text-body text-secondary">
+            Data se zobrazí po napojení na databázi.
+          </p>
+        ) : (
+          <Select
+            value={selectedCustomerId ?? ''}
+            onValueChange={setSelectedCustomerId}
+            disabled={!!capture}
           >
-            Zrušit
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowFileUpload(true)}
-          className="text-body-sm text-tertiary hover:text-primary transition-colors"
-        >
-          nebo nahrát soubor
-        </button>
+            <SelectTrigger>
+              <SelectValue placeholder="Vyberte zákazníka" />
+            </SelectTrigger>
+            <SelectContent>
+              {customers.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </section>
+
+      {/* Krok 2 — Nahrávka (gated on customer selected, hidden once captured) */}
+      {customerChosen && !capture && (
+        <section className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
+            <p className="text-caption text-tertiary">2 · Nahrávka</p>
+            <div className="inline-flex self-start rounded-[8px] border border-border-subtle p-0.5">
+              <button
+                type="button"
+                onClick={() => setMode('live')}
+                className={cn(
+                  'h-9 rounded-[6px] px-4 text-body-sm font-medium transition-colors',
+                  mode === 'live'
+                    ? 'bg-inset text-primary'
+                    : 'text-tertiary hover:text-secondary',
+                )}
+              >
+                Nahrát živě
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('file')}
+                className={cn(
+                  'h-9 rounded-[6px] px-4 text-body-sm font-medium transition-colors',
+                  mode === 'file'
+                    ? 'bg-inset text-primary'
+                    : 'text-tertiary hover:text-secondary',
+                )}
+              >
+                Nahrát soubor
+              </button>
+            </div>
+          </div>
+
+          {mode === 'live' ? (
+            <div className="py-12">
+              <LiveRecorder onStop={handleRecorderStop} />
+            </div>
+          ) : (
+            <div className="max-w-md">
+              <AudioUploader meetingId="" onUpload={handleFileUpload} />
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Krok 3 — Review */}
+      {capture && (
+        <section className="flex max-w-md flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <p className="text-caption text-tertiary">3 · Zkontrolovat</p>
+            <p className="text-body text-secondary">
+              {capture.method === 'browser_live'
+                ? 'Živá nahrávka připravena.'
+                : 'Soubor připraven.'}
+              {capture.transcript &&
+                ' Anna použije živý přepis jako vodítko pro Whisper.'}
+            </p>
+          </div>
+
+          {errorMessage && (
+            <p className="text-body-sm text-[color:var(--color-error)]">
+              {errorMessage}
+            </p>
+          )}
+
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              onClick={handleContinue}
+              className={cn(
+                'h-10 rounded-[8px] bg-accent px-4 text-body font-medium text-accent-text',
+                'transition-opacity hover:opacity-90 active:scale-[0.98]',
+              )}
+              style={{
+                transitionDuration: '150ms',
+                transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
+              }}
+            >
+              Pokračovat
+            </button>
+            <button
+              type="button"
+              onClick={handleDiscard}
+              className="text-body-sm text-tertiary transition-colors hover:text-primary"
+            >
+              Zahodit
+            </button>
+          </div>
+        </section>
       )}
     </div>
   );

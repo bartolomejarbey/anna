@@ -46,6 +46,13 @@ export type TranscribeAudioInput = {
   filename?: string;
   /** ISO-639-1 language code. Default 'cs' (Czech). */
   language?: string;
+  /**
+   * Up to ~224 tokens of context to bias Whisper toward specific spellings —
+   * typically a comma-separated list of customer names + Czech bank/insurance
+   * brands. Whisper-1 uses this as a "previous speech" hint, so plain comma
+   * lists work well. Empty/undefined → no biasing.
+   */
+  prompt?: string;
 };
 
 export async function transcribeAudio(
@@ -53,6 +60,7 @@ export async function transcribeAudio(
 ): Promise<TranscriptionResult> {
   const filename = input.filename ?? "audio.mp4";
   const language = input.language ?? "cs";
+  const prompt = input.prompt?.trim();
 
   // Wrap input into a File-compatible payload. `toFile` handles both Buffer
   // and Blob and is the SDK-recommended path for multipart uploads.
@@ -64,6 +72,7 @@ export async function transcribeAudio(
     file,
     language,
     response_format: "json",
+    ...(prompt ? { prompt } : {}),
   });
   const latency_ms = Math.round(performance.now() - startedAt);
 

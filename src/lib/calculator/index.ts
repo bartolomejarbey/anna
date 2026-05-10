@@ -1,185 +1,132 @@
-// =============================================================================
-// PLACEHOLDER kalkulátor — bude nahrazen, jakmile dorazí 4FIN excel spec.
+// Calculator entry — backward-compatible `calculate()` wrapping the new
+// EFA-based math (`zajisteni-2025` + `adapter`).
 //
-// Tahle implementace produkuje vizuálně rozumné, ale fiktivní výstupy z
-// `CustomerExtraction`. NEODRÁŽÍ skutečnou matematiku 4FIN produktů — ta žije
-// v jejich Excel sheetu a bude přenesena v další fázi.
-//
-// Cíl: aby PDF nabídka v demu četla profesionálně, i když poradce klikne na
-// libovolný extrahovaný profil. Žádné záporné hodnoty, žádné NaN, žádné
-// extrémně nereálné částky.
-// =============================================================================
+// PDF + offer narrative still consume `CalculationResult`. The new EFA
+// `PlanData` is emitted alongside as an extra field so new UI components
+// can render full Insurance / Retirement / Cashflow sections.
 
 import type { CustomerExtraction } from "@/lib/openai/schemas/customer-extraction";
+import { buildPlanData } from "./adapter";
+import type { MeetingFacts, PlanData } from "./types";
+
+export type { MeetingFacts, PlanData } from "./types";
+export { buildPlanData, factsToEfaInputs, EFA_DEFAULTS, RETIREMENT_DEFAULTS } from "./adapter";
+
+// ---------------------------------------------------------------------
+// Backwards-compat shape (consumed by PDF + narrative)
+// ---------------------------------------------------------------------
 
 export type ProductRecommendation = {
-  /** Lidsky čitelný název produktu (česky), např. „Penzijní spoření". */
   product: string;
-  /** Měsíční částka v Kč. Vždy >= 0, zaokrouhleno na 100 Kč. */
   monthly_amount_czk: number;
-  /** Jednověté zdůvodnění pro poradce / klienta v češtině. */
   rationale: string;
 };
 
 export type CalculationResult = {
-  /** Doporučená měsíční úložka do likvidních / jistých nástrojů. */
   recommended_savings_czk_per_month: number;
-  /** Doporučená měsíční úložka na penzi (DPS / DIP). */
   recommended_pension_czk_per_month: number;
-  /** Cílová výše rezervy v Kč (~6× měsíční výdaje). */
   recommended_emergency_fund_czk: number;
-  /** Očekávaný roční výnos portfolia v procentech (4 / 6 / 8 dle rizika). */
   estimated_annual_growth_pct: number;
-  /** Konkrétní produkty s měsíčními částkami a zdůvodněním. */
   product_recommendations: ProductRecommendation[];
-  /** Verze placeholderu — pomáhá identifikovat data v `calculations.calculator_version`. */
-  calculator_version: "placeholder-v1";
+  calculator_version: "zajisteni-2025-v1";
+  /** Plný EFA / důchod / cashflow plán pro nové UI. */
+  plan: PlanData;
 };
-
-const FALLBACK_INCOME_CZK = 35000; // střízlivá fallback hodnota pro min. pravděpodobné medián v ČR
-const FALLBACK_EXPENSES_RATIO = 0.7; // pokud nevíme výdaje, odhadneme ~70 % příjmu
 
 function roundTo(value: number, step: number): number {
   if (!Number.isFinite(value) || value <= 0) return 0;
   return Math.round(value / step) * step;
 }
 
-function clampNonNegative(value: number): number {
-  return Number.isFinite(value) && value > 0 ? value : 0;
+function formatCzkRound(n: number): string {
+  return Math.round(n).toLocaleString("cs-CZ");
 }
 
-function pickIncomeCzk(extraction: CustomerExtraction): number {
-  const v = extraction.finances.monthly_income_czk;
-  if (typeof v === "number" && v > 0) return v;
-  return FALLBACK_INCOME_CZK;
-}
-
-function pickExpensesCzk(
-  extraction: CustomerExtraction,
-  income: number,
-): number {
-  const v = extraction.finances.monthly_expenses_czk;
-  if (typeof v === "number" && v > 0) return v;
-  return Math.round(income * FALLBACK_EXPENSES_RATIO);
-}
-
-function pensionRatioForAge(age: number | null): number {
-  // Default 5 % příjmu na penzi; mladší o málo méně (déle se kumuluje), starší
-  // víc (dohánění). Hrubý placeholder — reálná logika dorazí s 4FIN excelem.
-  if (age === null) return 0.05;
-  if (age < 25) return 0.04;
-  if (age < 45) return 0.05;
-  if (age < 55) return 0.07;
-  return 0.09;
-}
-
-function growthPctForRisk(
-  risk: CustomerExtraction["goals"]["risk_appetite"],
-): number {
-  switch (risk) {
-    case "low":
-      return 4;
-    case "high":
-      return 8;
-    case "medium":
-    default:
-      return 6;
-  }
-}
-
-function buildProductRecommendations(
-  extraction: CustomerExtraction,
-  monthlySavings: number,
-  monthlyPension: number,
-): ProductRecommendation[] {
+function buildProductRecommendations(plan: PlanData): ProductRecommendation[] {
   const recs: ProductRecommendation[] = [];
-  const { customer, finances, goals } = extraction;
-  const age = customer.age;
-  const hasKids = customer.has_children === true;
-  const hasMortgage = finances.has_mortgage === true;
+  const { insurance, retirement, cashflow, efa } = plan;
 
-  // Penze — vždy.
-  recs.push({
-    product: "Penzijní spoření (DPS / DIP)",
-    monthly_amount_czk: roundTo(monthlyPension, 100),
-    rationale:
-      age !== null && age >= 45
-        ? "Doplnění příjmu v důchodu — zbývající horizont vyžaduje vyšší úložku."
-        : "Dlouhodobá kumulace s daňovou výhodou a státním příspěvkem.",
-  });
-
-  // Pravidelné spoření / investice — vždy.
-  const investmentMonthly = roundTo(monthlySavings, 100);
-  recs.push({
-    product:
-      goals.risk_appetite === "high"
-        ? "Investiční spoření do akciových ETF"
-        : "Investiční spoření v podílových fondech",
-    monthly_amount_czk: investmentMonthly,
-    rationale:
-      goals.primary_goal !== null
-        ? `Naplnění cíle: ${goals.primary_goal}`
-        : "Pravidelná tvorba majetku v souladu s rizikovým profilem.",
-  });
-
-  // Životní pojištění — pokud má hypotéku nebo děti.
-  if (hasMortgage || hasKids) {
-    const income = pickIncomeCzk(extraction);
-    const lifePremium = roundTo(income * 0.025, 100);
+  // 1. Životní pojištění (rizikové) — vždy, dimenzované z EFA
+  const lifeMonthly = roundTo(insurance.monthlyPremium, 100);
+  if (insurance.recommended > 0 && lifeMonthly > 0) {
     recs.push({
       product: "Rizikové životní pojištění",
-      monthly_amount_czk: lifePremium,
-      rationale: hasMortgage
-        ? "Krytí splátky hypotéky a zajištění rodiny pro případ výpadku příjmu."
-        : "Zajištění rodiny pro případ výpadku příjmu živitele.",
+      monthly_amount_czk: lifeMonthly,
+      rationale: `Krytí ${formatCzkRound(insurance.recommended)} Kč (smrt, invalidita, závažné onemocnění, trvalé následky úrazu) odpovídá výpočtu dle EFA metodiky.`,
     });
   }
 
-  // Hypotéka — pokud klient hledá bydlení (cíl obsahuje slova jako byt/dům).
-  const goalText = (goals.primary_goal ?? "").toLowerCase();
-  if (
-    !hasMortgage &&
-    (goalText.includes("byt") ||
-      goalText.includes("dům") ||
-      goalText.includes("bydlen"))
-  ) {
+  // 2. Penze — z requiredMonthlyContribution (Python-port)
+  if (retirement.recommendedMonthlySaving > 0) {
     recs.push({
-      product: "Hypotéka",
+      product: "Penzijní spoření (DPS / DIP)",
+      monthly_amount_czk: roundTo(retirement.recommendedMonthlySaving, 100),
+      rationale: `Doporučená měsíční úložka, aby ${retirement.currentAge}letý klient v ${retirement.retirementAge} dosáhl cílovou rentu ${formatCzkRound(retirement.targetIncome)} Kč/měs.`,
+    });
+  }
+
+  // 3. Pravidelné spoření — z regularSurplus po pokrytí životka + penze
+  const remainingSurplus = Math.max(
+    0,
+    cashflow.regularSurplus - lifeMonthly
+  );
+  if (remainingSurplus > 0) {
+    recs.push({
+      product: "Investiční spoření",
+      monthly_amount_czk: roundTo(remainingSurplus, 100),
+      rationale: `Volný měsíční zůstatek po pokrytí pojistky a penze — vhodný pro tvorbu majetku.`,
+    });
+  }
+
+  // 4. Denní dávky (pracovní neschopnost / hospitalizace) — pokud výpočet > 0
+  if (efa.workIncapacityDailyAmount > 0) {
+    recs.push({
+      product: "Denní dávky (pracovní neschopnost)",
       monthly_amount_czk: 0,
-      rationale:
-        "Pomůžeme zajistit hypoteční financování v aktuálních podmínkách trhu.",
+      rationale: `Doporučená denní dávka ${formatCzkRound(efa.workIncapacityDailyAmount)} Kč/den pokrývá nutné výdaje rodiny v případě dlouhodobé nemoci.`,
     });
   }
 
   return recs;
 }
 
+// ---------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------
+
 export function calculate(
   extraction: CustomerExtraction,
+  options?: { customerNameFromDb?: string | null }
 ): CalculationResult {
-  const income = pickIncomeCzk(extraction);
-  const expenses = pickExpensesCzk(extraction, income);
+  const facts: MeetingFacts | null = extraction.meeting_facts ?? null;
 
-  const recommendedSavings = clampNonNegative(income * 0.1);
-  const pensionRatio = pensionRatioForAge(extraction.customer.age);
-  const recommendedPension = clampNonNegative(income * pensionRatio);
-
-  const emergencyFund = clampNonNegative(expenses * 6);
-
-  const growthPct = growthPctForRisk(extraction.goals.risk_appetite);
-
-  const productRecommendations = buildProductRecommendations(
+  const plan = buildPlanData(
     extraction,
-    recommendedSavings,
-    recommendedPension,
+    facts,
+    options?.customerNameFromDb ?? null
   );
+
+  const recommendedSavings = Math.max(0, plan.cashflow.regularSurplus);
+  const recommendedPension = plan.retirement.recommendedMonthlySaving;
+  const emergencyFund = plan.cashflow.expenses * 6;
+
+  // Roční výnos: použijeme retirement annualReturnPct × 100; pokud advisor
+  // později naváže risk profile, můžeme přepsat na 4/6/8 dle goals.risk_appetite.
+  const growthPctFromRetirement = Math.round(plan.retirement.annualReturnPct * 100);
+  const growthPct =
+    extraction.goals.risk_appetite === "high"
+      ? 8
+      : extraction.goals.risk_appetite === "low"
+        ? 4
+        : growthPctFromRetirement || 6;
 
   return {
     recommended_savings_czk_per_month: roundTo(recommendedSavings, 100),
     recommended_pension_czk_per_month: roundTo(recommendedPension, 100),
     recommended_emergency_fund_czk: roundTo(emergencyFund, 1000),
     estimated_annual_growth_pct: growthPct,
-    product_recommendations: productRecommendations,
-    calculator_version: "placeholder-v1",
+    product_recommendations: buildProductRecommendations(plan),
+    calculator_version: "zajisteni-2025-v1",
+    plan,
   };
 }

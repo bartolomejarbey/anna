@@ -7,6 +7,7 @@ export type AnalyticsEventType =
   | 'transcription.started'
   | 'transcription.completed'
   | 'reconciliation.completed'
+  | 'cleanup.completed'
   | 'extraction.completed'
   | 'calculation.completed'
   | 'pdf.generated'

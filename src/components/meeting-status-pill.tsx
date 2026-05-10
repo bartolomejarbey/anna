@@ -9,6 +9,8 @@ export type MeetingStatus =
   | 'uploaded'
   | 'transcribing'
   | 'reconciling'
+  | 'cleaning'
+  | 'cleaned'
   | 'extracting'
   | 'extracted'
   | 'generating'
@@ -29,6 +31,8 @@ const STATUS_CONFIG: Record<MeetingStatus, { label: string; variant: BadgeVarian
   uploaded:     { label: 'Nahráno',              variant: 'neutral'  },
   transcribing: { label: 'Přepisujeme',          variant: 'warning'  },
   reconciling:  { label: 'Slaďujeme přepis',     variant: 'warning'  },
+  cleaning:     { label: 'Čistíme přepis',       variant: 'warning'  },
+  cleaned:      { label: 'Přepis čistý',         variant: 'neutral'  },
   extracting:   { label: 'Vytahujeme data',      variant: 'warning'  },
   extracted:    { label: 'Data připravena',      variant: 'neutral'  },
   generating:   { label: 'Vytváříme nabídku',    variant: 'warning'  },
