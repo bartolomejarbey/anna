@@ -7,7 +7,8 @@ export default function NabidkyPage() {
       <h1 className="text-h1 text-primary mb-12">Nabídky</h1>
       <EmptyState
         icon={FileText}
-        heading="Žádná nabídka."
+        heading="Anna ještě žádnou nabídku nevyrobila."
+        description="Jakmile v Naslouchači dotáhneš schůzku, nabídka přibude tady."
         action={{ label: 'Začít schůzku', href: '/schuzky/nova' }}
       />
     </div>

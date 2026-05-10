@@ -74,7 +74,7 @@ export function AiAsistentChat() {
         });
       }
     } catch {
-      setError('Něco se pokazilo. Zkuste to prosím znovu.');
+      setError('Něco vázne. Zkus to znovu.');
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsStreaming(false);
@@ -119,7 +119,7 @@ export function AiAsistentChat() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isStreaming}
-            placeholder="Napište zprávu"
+            placeholder="Zeptej se."
             rows={1}
             className={cn(
               'flex-1 resize-none overflow-hidden rounded-[8px] border border-border-subtle bg-surface',

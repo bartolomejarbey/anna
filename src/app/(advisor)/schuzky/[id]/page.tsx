@@ -144,10 +144,19 @@ export default async function MeetingDetailPage({
         )}
 
         {!meeting.transcript && !meeting.extraction && !meeting.offer && !isPipeline && status !== 'failed' && (
-          <EmptyState
-            icon={Microphone}
-            heading="Schůzka ještě nebyla zpracována."
-          />
+          <div className="flex flex-col items-start py-16">
+            <Microphone size={32} weight="regular" className="mb-6 text-tertiary" />
+            <h3 className="text-h2 text-primary">Anna se k téhle schůzce ještě nedostala.</h3>
+            <p className="mt-2 max-w-[44ch] text-body text-secondary">Pipeline ještě nezačal.</p>
+            <form action={retryPipeline.bind(null, id)} className="mt-8">
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center justify-center rounded-[8px] bg-accent px-4 text-body font-medium text-accent-text transition-opacity hover:opacity-90 active:scale-[0.98]"
+              >
+                Spustit zpracování
+              </button>
+            </form>
+          </div>
         )}
       </div>
     </div>

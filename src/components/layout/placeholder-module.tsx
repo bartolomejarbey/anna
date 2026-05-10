@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
 type Quarter = 'Q2 2026' | 'Q3 2026' | 'Q4 2026';
 
@@ -18,11 +17,6 @@ export function PlaceholderModule({ title, quarter, description }: PlaceholderMo
         </Badge>
         <h1 className="text-h1 text-primary">{title}</h1>
         <p className="mt-4 text-body text-secondary">{description}</p>
-        <div className="mt-10">
-          <Button variant="secondary" disabled>
-            Dejte mi vědět, až bude hotovo
-          </Button>
-        </div>
       </div>
     </div>
   );

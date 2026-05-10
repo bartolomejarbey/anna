@@ -30,7 +30,7 @@ export default async function NovaSchuzkaPage() {
 
   return (
     <div className="mx-auto w-full max-w-[960px] px-8 py-16">
-      <h1 className="text-display text-primary mb-16">Nová schůzka</h1>
+      <h1 className="text-h1 text-primary mb-16">Nová schůzka</h1>
       <NewMeetingShell customers={customers} />
     </div>
   );

@@ -1,8 +1,16 @@
-import Link from 'next/link';
 import { currentAdvisor, currentAdvisorId } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ToolCard } from '@/components/launchpad/tool-card';
 import { AsistentToolCard } from '@/components/launchpad/asistent-tool-card';
+import {
+  MotionSection,
+  MotionSectionGroup,
+} from '@/components/launchpad/dashboard-motion';
+import { PlatformBackdrop } from '@/components/launchpad/platform-backdrop';
+import { CornerAccent } from '@/components/launchpad/corner-accent';
+import { HeroBlock } from '@/components/launchpad/hero-block';
+import { EditorialActivity } from '@/components/launchpad/editorial-activity';
+import { PageWave } from '@/components/launchpad/page-wave';
 import { NaslouchacIcon } from '@/components/icons/tools/naslouchac-icon';
 import { ZakazniciIcon } from '@/components/icons/tools/zakaznici-icon';
 import { NabidkyIcon } from '@/components/icons/tools/nabidky-icon';
@@ -14,8 +22,6 @@ import { KalendarIcon } from '@/components/icons/tools/kalendar-icon';
 import { InboxIcon } from '@/components/icons/tools/inbox-icon';
 import { CrmIcon } from '@/components/icons/tools/crm-icon';
 import { KnowledgeIcon } from '@/components/icons/tools/knowledge-icon';
-import { MeetingStatusPill } from '@/components/meeting-status-pill';
-import type { MeetingStatus } from '@/components/meeting-status-pill';
 
 export const metadata = { title: 'Anna' };
 
@@ -117,202 +123,126 @@ export default async function DashboardPage() {
   const weekReady = weekMeetings.filter((m) => m.status === 'ready').length;
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-8 pt-24 pb-32">
-      {/* Section 1 — Hero greeting */}
-      <header className="mb-24">
-        <h1 className="text-display text-primary">
-          {greeting}, {greetingName}
-        </h1>
-      </header>
+    <div className="relative mx-auto w-full max-w-[1280px] px-8 pt-24 pb-32">
+      <PlatformBackdrop />
+      <CornerAccent position="tr" />
+      <CornerAccent position="bl" />
 
-      {/* Section 2 — Tvoje aktivita */}
-      <section className="mb-24">
-        <h2 className="mb-6 text-caption text-tertiary">Tvoje aktivita</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <ActivityWeekCard total={weekTotal} ready={weekReady} />
-          <ActivityLatestMeetingCard meeting={latestMeeting} />
-          <ActivityLatestOfferCard offer={latestOffer} />
-        </div>
-      </section>
+      {/* Section 1 — Hero scenic moment */}
+      <HeroBlock greeting={greeting} name={greetingName} />
 
-      {/* Section 3 — Tvoje nástroje */}
-      <section className="mb-24">
-        <h2 className="mb-6 text-caption text-tertiary">Tvoje nástroje</h2>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <ToolCard
-            title="Naslouchač"
-            description="Nahrát schůzku, dostat přepis a strukturovanou nabídku."
-            icon={<NaslouchacIcon />}
-            href="/schuzky/nova"
-            featured
+      <MotionSectionGroup className="relative z-10">
+        {/* Section 2 — Editorial activity sentences */}
+        <MotionSection className="mb-24">
+          <span className="anna-section-rule mb-5 block" aria-hidden />
+          <h2 className="mb-6 text-h2 text-primary">Dnes na Anně</h2>
+          <EditorialActivity
+            weekTotal={weekTotal}
+            weekReady={weekReady}
+            latestMeeting={latestMeeting}
+            latestOffer={latestOffer}
           />
-          <ToolCard
-            title="Zákazníci"
-            description="Tvoje zákaznická síť — kontakty, schůzky, nabídky."
-            icon={<ZakazniciIcon />}
-            href="/zakaznici"
-          />
-          <ToolCard
-            title="Nabídky"
-            description="PDF nabídky vytvořené z nahraných schůzek."
-            icon={<NabidkyIcon />}
-            href="/nabidky"
-          />
-          <ToolCard
-            title="Profil"
-            description="Tvoje branding — barva, logo, kontaktní údaje."
-            icon={<ProfilIcon />}
-            href="/profil"
-          />
-          <AsistentToolCard />
-          {showAdminTile && (
+        </MotionSection>
+
+        {/* Section 3 — Nástroje */}
+        <MotionSection className="mb-24">
+          <span className="anna-section-rule mb-5 block" aria-hidden />
+          <h2 className="mb-6 text-h2 text-primary">Nástroje na Anně</h2>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             <ToolCard
-              title="Admin"
-              description="Statistiky používání, audit, fine-tune data."
-              icon={<AdminIcon />}
-              href="/admin"
+              title="Naslouchač"
+              description="Nahrávka schůzky, přepis a strukturovaná nabídka."
+              icon={<NaslouchacIcon />}
+              href="/schuzky/nova"
+              variant="featured"
             />
-          )}
-        </div>
-      </section>
+            <ToolCard
+              title="Zákazníci"
+              description="Kontakty, schůzky a nabídky na jednom místě."
+              icon={<ZakazniciIcon />}
+              href="/zakaznici"
+              variant="growth"
+            />
+            <ToolCard
+              title="Nabídky"
+              description="PDF nabídky vytvořené z nahraných schůzek."
+              icon={<NabidkyIcon />}
+              href="/nabidky"
+              variant="value"
+            />
+            <ToolCard
+              title="Profil"
+              description="Barva, logo, kontaktní údaje."
+              icon={<ProfilIcon />}
+              href="/profil"
+              variant="value"
+            />
+            <AsistentToolCard />
+            {showAdminTile && (
+              <ToolCard
+                title="Admin"
+                description="Statistiky, audit, data pro fine-tuning."
+                icon={<AdminIcon />}
+                href="/admin"
+                variant="growth"
+              />
+            )}
+          </div>
+        </MotionSection>
 
-      {/* Section 4 — Brzy dostupné */}
-      <section>
-        <h2 className="mb-6 text-caption text-tertiary">Brzy dostupné</h2>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <ToolCard
-            title="Newsletter"
-            description="Posílej zákazníkům personalizované zprávy."
-            icon={<NewsletterIcon />}
-            disabled
-            badge="Q3 2026"
-          />
-          <ToolCard
-            title="Pojištění"
-            description="Direct API integrace s pojišťovnami."
-            icon={<PojisteniIcon />}
-            disabled
-            badge="Q2 2026"
-          />
-          <ToolCard
-            title="Kalendář"
-            description="Plánování schůzek napříč zákazníky."
-            icon={<KalendarIcon />}
-            disabled
-            badge="Q3 2026"
-          />
-          <ToolCard
-            title="Inbox"
-            description="Sjednocený inbox pro všechny komunikační kanály."
-            icon={<InboxIcon />}
-            disabled
-            badge="Q3 2026"
-          />
-          <ToolCard
-            title="CRM"
-            description="Pipeline a deal management pro tvoji síť."
-            icon={<CrmIcon />}
-            disabled
-            badge="Q4 2026"
-          />
-          <ToolCard
-            title="Knowledge base"
-            description="Tvoje znalostní databáze — produkty, pravidla, scripty."
-            icon={<KnowledgeIcon />}
-            disabled
-            badge="Q4 2026"
-          />
-        </div>
-      </section>
+        {/* Section 4 — Anna roste */}
+        <MotionSection>
+          <span className="anna-section-rule mb-5 block" aria-hidden />
+          <h2 className="mb-6 text-h2 text-primary">Anna roste</h2>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <ToolCard
+              title="Newsletter"
+              description="Posílej zákazníkům personalizované zprávy."
+              icon={<NewsletterIcon />}
+              variant="disabled"
+              badge="Q3 2026"
+            />
+            <ToolCard
+              title="Pojištění"
+              description="Přímé napojení na pojišťovny."
+              icon={<PojisteniIcon />}
+              variant="disabled"
+              badge="Q2 2026"
+            />
+            <ToolCard
+              title="Kalendář"
+              description="Plánování schůzek se zákazníky."
+              icon={<KalendarIcon />}
+              variant="disabled"
+              badge="Q3 2026"
+            />
+            <ToolCard
+              title="Inbox"
+              description="E-maily, SMS a chaty na jednom místě."
+              icon={<InboxIcon />}
+              variant="disabled"
+              badge="Q3 2026"
+            />
+            <ToolCard
+              title="CRM"
+              description="Obchodní pipeline a správa příležitostí."
+              icon={<CrmIcon />}
+              variant="disabled"
+              badge="Q4 2026"
+            />
+            <ToolCard
+              title="Knowledge base"
+              description="Produkty, pravidla, skripty."
+              icon={<KnowledgeIcon />}
+              variant="disabled"
+              badge="Q4 2026"
+            />
+          </div>
+        </MotionSection>
+
+        <PageWave />
+      </MotionSectionGroup>
     </div>
   );
 }
 
-function ActivityShell({ caption, children }: { caption: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3 rounded-[12px] border border-border-subtle bg-surface p-6">
-      <span className="text-caption text-tertiary">{caption}</span>
-      {children}
-    </div>
-  );
-}
-
-function ActivityShellLink({
-  caption,
-  href,
-  children,
-}: {
-  caption: string;
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex flex-col gap-3 rounded-[12px] border border-border-subtle bg-surface p-6 transition-colors hover:border-border-default"
-    >
-      <span className="text-caption text-tertiary">{caption}</span>
-      {children}
-    </Link>
-  );
-}
-
-function ActivityWeekCard({ total, ready }: { total: number; ready: number }) {
-  return (
-    <ActivityShell caption="Tento týden">
-      <span className="text-stat text-primary">{total}</span>
-      <span className="text-body-sm text-secondary">
-        {total === 0 ? 'žádná schůzka' : `${ready} ze ${total} hotových`}
-      </span>
-    </ActivityShell>
-  );
-}
-
-function ActivityLatestMeetingCard({
-  meeting,
-}: {
-  meeting: { id: string; status: string; date: string; customerName: string | null } | null;
-}) {
-  if (!meeting) {
-    return (
-      <ActivityShell caption="Posl. schůzka">
-        <span className="text-h3 text-tertiary">Zatím žádná</span>
-        <span className="text-body-sm text-tertiary">Začni nahráváním v Naslouchači.</span>
-      </ActivityShell>
-    );
-  }
-  return (
-    <ActivityShellLink caption="Posl. schůzka" href={`/schuzky/${meeting.id}`}>
-      <span className="text-h3 text-primary">{meeting.customerName ?? 'Zákazník'}</span>
-      <div className="flex items-center justify-between">
-        <span className="text-body-sm text-tertiary">
-          {new Date(meeting.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' })}
-        </span>
-        <MeetingStatusPill status={meeting.status as MeetingStatus} />
-      </div>
-    </ActivityShellLink>
-  );
-}
-
-function ActivityLatestOfferCard({
-  offer,
-}: {
-  offer: { id: string; date: string; customerName: string | null } | null;
-}) {
-  if (!offer) {
-    return (
-      <ActivityShell caption="Posl. nabídka">
-        <span className="text-h3 text-tertiary">Zatím žádná</span>
-        <span className="text-body-sm text-tertiary">Vygeneruje se po dokončení schůzky.</span>
-      </ActivityShell>
-    );
-  }
-  return (
-    <ActivityShellLink caption="Posl. nabídka" href="/nabidky">
-      <span className="text-h3 text-primary">{offer.customerName ?? 'Zákazník'}</span>
-      <span className="text-body-sm text-tertiary">
-        {new Date(offer.date).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' })}
-      </span>
-    </ActivityShellLink>
-  );
-}

@@ -1,42 +1,53 @@
-import { loginAsDemoAdvisor } from '@/lib/actions/auth';
+import Link from 'next/link';
+import { AnnaWordmark } from '@/components/brand/anna-wordmark';
+import { LoginAdvisorCard, type AvatarTint } from '@/components/login/login-advisor-card';
+import { PlatformBackdrop } from '@/components/launchpad/platform-backdrop';
 
-const DEMO_ADVISORS = [
-  { id: 'ad0000000001', name: 'Karel Novák', email: 'karel.novak@4fin.cz', role: 'Senior poradce' },
-  { id: 'ad0000000002', name: 'Petra Svobodová', email: 'petra.svobodova@4fin.cz', role: 'Poradkyně' },
-  { id: 'ad0000000003', name: 'Tomáš Dvořák', email: 'tomas.dvorak@4fin.cz', role: 'Poradce' },
-  { id: 'ad0000000004', name: 'Eva Černá', email: 'eva.cerna@4fin.cz', role: 'Senior poradkyně' },
-  { id: 'ad0000000005', name: 'Martin Procházka', email: 'martin.prochazka@4fin.cz', role: 'Poradce' },
-  { id: 'ad0000000099', name: 'Bartoloměj Rota', email: 'bartolomej@arbey.cz', role: 'Super admin' },
-] as const;
+const DEMO_ADVISORS: Array<{
+  id: string;
+  name: string;
+  role: string;
+  tint: AvatarTint;
+}> = [
+  { id: 'ad0000000001', name: 'Karel Novák', role: 'Senior poradce', tint: 'cream' },
+  { id: 'ad0000000002', name: 'Petra Svobodová', role: 'Poradkyně', tint: 'sage' },
+  { id: 'ad0000000003', name: 'Tomáš Dvořák', role: 'Poradce', tint: 'ochre' },
+  { id: 'ad0000000004', name: 'Eva Černá', role: 'Senior poradkyně', tint: 'wine' },
+  { id: 'ad0000000005', name: 'Martin Procházka', role: 'Poradce', tint: 'inset' },
+];
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-canvas px-6 py-16">
-      <div className="w-full max-w-md">
-        <div className="mb-12">
-          <h1 className="text-display text-primary">Anna</h1>
-        </div>
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-canvas px-6 py-16">
+      <PlatformBackdrop />
 
-        <div className="flex flex-col gap-2">
+      <div className="relative z-10 w-full max-w-md">
+        <header className="mb-14">
+          <AnnaWordmark size="hero" animate />
+          <p className="mt-6 font-serif italic text-[18px] leading-[1.4] text-secondary">Pro finanční poradce</p>
+        </header>
+
+        <div className="flex flex-col gap-3">
           {DEMO_ADVISORS.map((advisor) => (
-            <form key={advisor.id} action={loginAsDemoAdvisor.bind(null, advisor.id)}>
-              <button
-                type="submit"
-                className="flex w-full items-center justify-between rounded-[12px] border border-border-subtle bg-surface px-5 py-4 text-left transition-colors hover:border-border-default"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-body font-medium text-primary">{advisor.name}</p>
-                  <p className="truncate text-body-sm text-tertiary">{advisor.role}</p>
-                </div>
-                <span aria-hidden className="text-tertiary">
-                  →
-                </span>
-              </button>
-            </form>
+            <LoginAdvisorCard
+              key={advisor.id}
+              advisorId={advisor.id}
+              name={advisor.name}
+              role={advisor.role}
+              tint={advisor.tint}
+            />
           ))}
         </div>
 
-        <p className="mt-10 text-body-sm text-tertiary">4FIN HOLDING · demo</p>
+        <div className="mt-12 flex items-center justify-between">
+          <p className="text-body-sm text-tertiary">4FIN HOLDING · demo</p>
+          <Link
+            href="/login/admin"
+            className="text-body-sm text-tertiary transition-colors hover:text-accent"
+          >
+            Bartoloměj?
+          </Link>
+        </div>
       </div>
     </div>
   );

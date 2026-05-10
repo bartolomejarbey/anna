@@ -13,6 +13,7 @@ export function AsistentToolCard() {
       description="Zeptej se Anny. Pomáhá s textem, klienty, formulacemi."
       icon={<AsistentIcon />}
       onClick={() => openAssistant()}
+      variant="featured"
     />
   );
 }

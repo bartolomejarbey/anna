@@ -159,7 +159,7 @@ export default async function AdminPage() {
               </p>
             ) : (
               <>
-                <p className="text-display text-primary">{meetingResult.count ?? 0}</p>
+                <p className="text-stat text-primary">{meetingResult.count ?? 0}</p>
                 <p className="mt-2 text-body-sm text-tertiary">od {meetingResult.todayIso}</p>
               </>
             )}
