@@ -12,6 +12,7 @@ import { PageWave } from '@/components/launchpad/page-wave';
 import { NaslouchacIcon } from '@/components/icons/tools/naslouchac-icon';
 import { ZakazniciIcon } from '@/components/icons/tools/zakaznici-icon';
 import { NabidkyIcon } from '@/components/icons/tools/nabidky-icon';
+import { FinplanIcon } from '@/components/icons/tools/finplan-icon';
 import { ProfilIcon } from '@/components/icons/tools/profil-icon';
 import { AdminIcon } from '@/components/icons/tools/admin-icon';
 import { NewsletterIcon } from '@/components/icons/tools/newsletter-icon';
@@ -53,6 +54,13 @@ export default async function DashboardPage() {
               description="Kontakty, schůzky a nabídky na jednom místě."
               icon={<ZakazniciIcon />}
               href="/zakaznici"
+              variant="growth"
+            />
+            <ToolCard
+              title="Finanční plán"
+              description="Klient nahraje výpisy, Anna spočítá cashflow, krytí a důchod."
+              icon={<FinplanIcon />}
+              href="/financni-plan"
               variant="growth"
             />
             <ToolCard
