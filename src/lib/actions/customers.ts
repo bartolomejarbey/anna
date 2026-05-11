@@ -1,5 +1,8 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { currentAdvisorId, currentTenantId } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
 /**
@@ -94,4 +97,91 @@ export async function getWhisperPromptHint(advisorId: string): Promise<string> {
   const hints = await getCustomerHints(advisorId);
   const joined = hints.join(', ');
   return joined.length > 800 ? joined.slice(0, 800) : joined;
+}
+
+// ====== Create customer ======
+// Bez klientské zóny. Zákazník nemusí mít e-mail ani účet — poradce
+// si může spravovat i pouhý záznam s jménem.
+
+const createCustomerSchema = z.object({
+  full_name: z.string().trim().min(1, 'Zadej jméno zákazníka.').max(200),
+  email: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : null)),
+  phone: z
+    .string()
+    .trim()
+    .max(64)
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : null)),
+});
+
+export type CreatedCustomer = {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+};
+
+export type CreateCustomerResult =
+  | { ok: true; customer: CreatedCustomer }
+  | { ok: false; error: string };
+
+export async function createCustomer(input: {
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+}): Promise<CreateCustomerResult> {
+  const parsed = createCustomerSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Neplatný vstup.' };
+  }
+
+  try {
+    const advisorId = await currentAdvisorId();
+    const tenantId = await currentTenantId();
+    const admin = supabaseAdmin();
+
+    const { data, error } = await admin
+      .from('customers')
+      .insert({
+        tenant_id: tenantId,
+        advisor_id: advisorId,
+        full_name: parsed.data.full_name,
+        email: parsed.data.email,
+        phone: parsed.data.phone,
+      })
+      .select('id, full_name, email, phone')
+      .single();
+
+    if (error || !data) {
+      console.error('[createCustomer] insert failed', error);
+      return {
+        ok: false,
+        error: error?.message ?? 'Nepodařilo se uložit zákazníka.',
+      };
+    }
+
+    revalidatePath('/zakaznici');
+    revalidatePath('/financni-plan/novy');
+
+    return {
+      ok: true,
+      customer: {
+        id: data.id,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone,
+      },
+    };
+  } catch (err) {
+    console.error('[createCustomer] unexpected error', err);
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Neznámá chyba.',
+    };
+  }
 }

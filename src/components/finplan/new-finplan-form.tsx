@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Copy, Check, ArrowRight } from '@phosphor-icons/react';
+import { Copy, Check, ArrowRight, Plus } from '@phosphor-icons/react';
 import { createFinplanSession, type CreatedSession } from '@/lib/actions/finplan';
+import { createCustomer } from '@/lib/actions/customers';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -13,27 +14,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface Props {
-  customers: Array<{ id: string; full_name: string; email: string | null }>;
+interface CustomerOption {
+  id: string;
+  full_name: string;
+  email: string | null;
 }
 
-export function NewFinplanForm({ customers }: Props) {
+interface Props {
+  customers: CustomerOption[];
+}
+
+export function NewFinplanForm({ customers: initialCustomers }: Props) {
+  const [customers, setCustomers] = useState<CustomerOption[]>(initialCustomers);
   const [customerId, setCustomerId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CreatedSession | null>(null);
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
-
-  if (customers.length === 0) {
-    return (
-      <div className="rounded-[12px] border border-border-subtle bg-surface p-6">
-        <p className="text-body text-primary">Nemáš zatím žádné zákazníky.</p>
-        <p className="mt-2 text-body-sm text-secondary">
-          Nejdřív přidej zákazníka v sekci Zákazníci, pak se sem vrať.
-        </p>
-      </div>
-    );
-  }
+  const [showNewCustomer, setShowNewCustomer] = useState(initialCustomers.length === 0);
 
   const handleSubmit = () => {
     if (!customerId) {
@@ -42,11 +40,11 @@ export function NewFinplanForm({ customers }: Props) {
     }
     setError(null);
     startTransition(async () => {
-      try {
-        const created = await createFinplanSession({ customerId });
-        setResult(created);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
+      const res = await createFinplanSession({ customerId });
+      if (res.ok) {
+        setResult(res.session);
+      } else {
+        setError(res.error);
       }
     });
   };
@@ -60,6 +58,15 @@ export function NewFinplanForm({ customers }: Props) {
     } catch {
       // ignore
     }
+  };
+
+  const handleCustomerCreated = (c: CustomerOption) => {
+    setCustomers((prev) =>
+      [...prev, c].sort((a, b) => a.full_name.localeCompare(b.full_name, 'cs')),
+    );
+    setCustomerId(c.id);
+    setShowNewCustomer(false);
+    setError(null);
   };
 
   if (result) {
@@ -124,24 +131,43 @@ export function NewFinplanForm({ customers }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <label className="mb-2 block text-caption text-tertiary">Zákazník</label>
-        <Select value={customerId} onValueChange={setCustomerId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Vyber zákazníka…" />
-          </SelectTrigger>
-          <SelectContent>
-            {customers.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.full_name}
-                {c.email && (
-                  <span className="ml-2 text-body-sm text-tertiary">{c.email}</span>
-                )}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {customers.length > 0 && !showNewCustomer && (
+        <div>
+          <label className="mb-2 block text-caption text-tertiary">Zákazník</label>
+          <Select value={customerId} onValueChange={setCustomerId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Vyber zákazníka…" />
+            </SelectTrigger>
+            <SelectContent>
+              {customers.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.full_name}
+                  {c.email && (
+                    <span className="ml-2 text-body-sm text-tertiary">{c.email}</span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <button
+            type="button"
+            onClick={() => setShowNewCustomer(true)}
+            className="mt-2 inline-flex items-center gap-1.5 text-body-sm text-secondary transition-colors hover:text-accent"
+          >
+            <Plus size={14} weight="regular" />
+            Nebo přidat nového zákazníka
+          </button>
+        </div>
+      )}
+
+      {showNewCustomer && (
+        <NewCustomerInline
+          onCreated={handleCustomerCreated}
+          onCancel={
+            customers.length > 0 ? () => setShowNewCustomer(false) : undefined
+          }
+        />
+      )}
 
       {error && (
         <div className="rounded-[8px] border border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)] bg-error-bg px-4 py-3 text-body-sm text-error">
@@ -149,16 +175,116 @@ export function NewFinplanForm({ customers }: Props) {
         </div>
       )}
 
-      <div className="flex gap-3 border-t border-border-subtle pt-6">
-        <Button onClick={handleSubmit} disabled={isPending}>
-          {isPending ? 'Vytvářím…' : 'Vytvořit odkaz'}
-        </Button>
-        <Link
-          href="/financni-plan"
-          className="inline-flex h-10 items-center rounded-[8px] border border-border-default bg-transparent px-4 text-body font-medium text-primary transition-colors hover:bg-subtle"
-        >
-          Zrušit
-        </Link>
+      {!showNewCustomer && (
+        <div className="flex gap-3 border-t border-border-subtle pt-6">
+          <Button onClick={handleSubmit} disabled={isPending || !customerId}>
+            {isPending ? 'Vytvářím…' : 'Vytvořit odkaz'}
+          </Button>
+          <Link
+            href="/financni-plan"
+            className="inline-flex h-10 items-center rounded-[8px] border border-border-default bg-transparent px-4 text-body font-medium text-primary transition-colors hover:bg-subtle"
+          >
+            Zrušit
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NewCustomerInline({
+  onCreated,
+  onCancel,
+}: {
+  onCreated: (c: CustomerOption) => void;
+  onCancel?: () => void;
+}) {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleCreate = () => {
+    const trimmed = fullName.trim();
+    if (!trimmed) {
+      setError('Zadej jméno zákazníka.');
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await createCustomer({
+        full_name: trimmed,
+        email: email.trim() || null,
+        phone: phone.trim() || null,
+      });
+      if (res.ok) {
+        onCreated(res.customer);
+      } else {
+        setError(res.error);
+      }
+    });
+  };
+
+  return (
+    <div className="rounded-[12px] border border-border-subtle bg-surface p-6">
+      <p className="mb-1 text-body font-medium text-primary">Nový zákazník</p>
+      <p className="mb-5 text-body-sm text-secondary">
+        Stačí jméno. E-mail a telefon jsou volitelné — klientská zóna pro zákazníka není nutná.
+      </p>
+
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="mb-1.5 block text-caption text-tertiary">Jméno *</label>
+          <input
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            autoFocus
+            placeholder="Např. Jan Novák"
+            className="flex h-10 w-full rounded-[8px] border border-border-default bg-surface px-3 text-body text-primary placeholder:text-tertiary focus:outline-none focus:border-accent transition-colors"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-caption text-tertiary">E-mail (volitelné)</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="jan@example.cz"
+              className="flex h-10 w-full rounded-[8px] border border-border-default bg-surface px-3 text-body text-primary placeholder:text-tertiary focus:outline-none focus:border-accent transition-colors"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-caption text-tertiary">Telefon (volitelné)</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+420 …"
+              className="flex h-10 w-full rounded-[8px] border border-border-default bg-surface px-3 text-body text-primary placeholder:text-tertiary focus:outline-none focus:border-accent transition-colors"
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-[8px] border border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)] bg-error-bg px-4 py-3 text-body-sm text-error">
+            {error}
+          </div>
+        )}
+
+        <div className="flex gap-3 pt-2">
+          <Button onClick={handleCreate} disabled={isPending}>
+            {isPending ? 'Ukládám…' : 'Uložit a pokračovat'}
+          </Button>
+          {onCancel && (
+            <Button variant="secondary" onClick={onCancel}>
+              Zrušit
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

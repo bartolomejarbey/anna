@@ -28,63 +28,89 @@ export interface CreatedSession {
   expiresAt: string;
 }
 
+export type CreateSessionResult =
+  | { ok: true; session: CreatedSession }
+  | { ok: false; error: string };
+
 export async function createFinplanSession(input: {
   customerId: string;
-}): Promise<CreatedSession> {
-  const { customerId } = createSessionSchema.parse(input);
-  const advisorId = await currentAdvisorId();
-  const tenantId = await currentTenantId();
-
-  const admin = supabaseAdmin();
-
-  // Ověř, že zákazník patří poradci
-  const { data: customer, error: custErr } = await admin
-    .from("customers")
-    .select("id, advisor_id, tenant_id")
-    .eq("id", customerId)
-    .single();
-
-  if (custErr || !customer) {
-    throw new Error("Zákazník nenalezen.");
+}): Promise<CreateSessionResult> {
+  const parsed = createSessionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: 'Neplatný zákazník.' };
   }
-  if (customer.advisor_id !== advisorId) {
-    throw new Error("Tento zákazník nepatří tomuto poradci.");
+  const { customerId } = parsed.data;
+
+  try {
+    const advisorId = await currentAdvisorId();
+    const tenantId = await currentTenantId();
+    const admin = supabaseAdmin();
+
+    const { data: customer, error: custErr } = await admin
+      .from("customers")
+      .select("id, advisor_id, tenant_id")
+      .eq("id", customerId)
+      .single();
+
+    if (custErr || !customer) {
+      console.error('[createFinplanSession] customer not found', { customerId, err: custErr });
+      return { ok: false, error: 'Zákazník nenalezen.' };
+    }
+    if (customer.advisor_id !== advisorId) {
+      return { ok: false, error: 'Tento zákazník nepatří tomuto poradci.' };
+    }
+
+    const accessToken = generateAccessToken();
+
+    const { data, error } = await admin
+      .from("finplan_sessions")
+      .insert({
+        tenant_id: tenantId,
+        advisor_id: advisorId,
+        customer_id: customerId,
+        access_token: accessToken,
+        status: "created",
+      })
+      .select("id, access_token, expires_at")
+      .single();
+
+    if (error || !data) {
+      console.error('[createFinplanSession] insert failed', error);
+      return {
+        ok: false,
+        error: `Nepodařilo se vytvořit odkaz: ${error?.message ?? 'neznámá chyba'}`,
+      };
+    }
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ??
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : null) ??
+      "http://localhost:3000";
+    const normalizedBase = baseUrl.startsWith("http")
+      ? baseUrl
+      : `https://${baseUrl}`;
+
+    revalidatePath("/zakaznici");
+    revalidatePath("/financni-plan");
+
+    return {
+      ok: true,
+      session: {
+        sessionId: data.id,
+        accessToken: data.access_token,
+        url: `${normalizedBase}/plan/${data.access_token}`,
+        expiresAt: data.expires_at,
+      },
+    };
+  } catch (err) {
+    console.error('[createFinplanSession] unexpected error', err);
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Neznámá chyba.',
+    };
   }
-
-  const accessToken = generateAccessToken();
-
-  const { data, error } = await admin
-    .from("finplan_sessions")
-    .insert({
-      tenant_id: tenantId,
-      advisor_id: advisorId,
-      customer_id: customerId,
-      access_token: accessToken,
-      status: "created",
-    })
-    .select("id, access_token, expires_at")
-    .single();
-
-  if (error || !data) {
-    throw new Error(`Nepodařilo se vytvořit session: ${error?.message}`);
-  }
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.NEXT_PUBLIC_VERCEL_URL ??
-    "http://localhost:3000";
-  const normalizedBase = baseUrl.startsWith("http")
-    ? baseUrl
-    : `https://${baseUrl}`;
-
-  revalidatePath("/zakaznici");
-
-  return {
-    sessionId: data.id,
-    accessToken: data.access_token,
-    url: `${normalizedBase}/plan/${data.access_token}`,
-    expiresAt: data.expires_at,
-  };
 }
 
 // ====== List sessions for advisor ======

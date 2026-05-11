@@ -3,6 +3,7 @@ import { currentAdvisorId } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { NewCustomerButton } from '@/components/customers/new-customer-button';
 
 export const metadata = { title: 'Zákazníci — Anna' };
 
@@ -47,7 +48,10 @@ export default async function ZakazniciPage() {
 
   return (
     <div className="mx-auto w-full max-w-[960px] px-8 py-16">
-      <h1 className="text-h1 text-primary mb-12">Zákazníci</h1>
+      <div className="mb-12 flex items-end justify-between gap-6">
+        <h1 className="text-h1 text-primary">Zákazníci</h1>
+        <NewCustomerButton />
+      </div>
 
       {dbError && (
         <p className="mb-8 text-body text-secondary">
@@ -58,7 +62,8 @@ export default async function ZakazniciPage() {
       {!dbError && customers.length === 0 && (
         <EmptyState
           icon={Users}
-          heading="Žádný zákazník."
+          heading="Zatím žádný zákazník."
+          description="Přidej zákazníka tlačítkem nahoře nebo začni rovnou schůzkou — Annu poznáš zatímco mluvíš."
           action={{ label: 'Začít schůzku', href: '/schuzky/nova' }}
         />
       )}
