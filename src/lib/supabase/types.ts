@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       advisors: {
@@ -379,6 +354,281 @@ export type Database = {
           },
         ]
       }
+      finplan_analyses: {
+        Row: {
+          advisor_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          monthly_expenses: number | null
+          monthly_income: number | null
+          notes: string | null
+          plan_data: Json
+          session_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          advisor_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          monthly_expenses?: number | null
+          monthly_income?: number | null
+          notes?: string | null
+          plan_data: Json
+          session_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          advisor_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          monthly_expenses?: number | null
+          monthly_income?: number | null
+          notes?: string | null
+          plan_data?: Json
+          session_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finplan_analyses_advisor_id_fkey"
+            columns: ["advisor_id"]
+            isOneToOne: false
+            referencedRelation: "advisors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finplan_analyses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finplan_analyses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "finplan_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finplan_analyses_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finplan_extracted: {
+        Row: {
+          bank_name: string | null
+          created_at: string
+          id: string
+          id_address: string | null
+          id_birth_date: string | null
+          id_full_name: string | null
+          input_excerpt: string | null
+          latency_ms: number | null
+          model: string | null
+          period_months: number | null
+          raw_response: Json | null
+          session_id: string
+          system_prompt: string | null
+          tokens_used: number | null
+          total_expenses: number | null
+          total_income: number | null
+          transaction_count: number | null
+          upload_id: string
+          user_prompt: string | null
+        }
+        Insert: {
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          id_address?: string | null
+          id_birth_date?: string | null
+          id_full_name?: string | null
+          input_excerpt?: string | null
+          latency_ms?: number | null
+          model?: string | null
+          period_months?: number | null
+          raw_response?: Json | null
+          session_id: string
+          system_prompt?: string | null
+          tokens_used?: number | null
+          total_expenses?: number | null
+          total_income?: number | null
+          transaction_count?: number | null
+          upload_id: string
+          user_prompt?: string | null
+        }
+        Update: {
+          bank_name?: string | null
+          created_at?: string
+          id?: string
+          id_address?: string | null
+          id_birth_date?: string | null
+          id_full_name?: string | null
+          input_excerpt?: string | null
+          latency_ms?: number | null
+          model?: string | null
+          period_months?: number | null
+          raw_response?: Json | null
+          session_id?: string
+          system_prompt?: string | null
+          tokens_used?: number | null
+          total_expenses?: number | null
+          total_income?: number | null
+          transaction_count?: number | null
+          upload_id?: string
+          user_prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finplan_extracted_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "finplan_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finplan_extracted_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: true
+            referencedRelation: "finplan_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finplan_sessions: {
+        Row: {
+          access_token: string
+          advisor_id: string
+          analyzed_at: string | null
+          created_at: string
+          customer_id: string
+          employment_type:
+            | Database["public"]["Enums"]["finplan_employment_type"]
+            | null
+          expires_at: string
+          id: string
+          opened_at: string | null
+          status: Database["public"]["Enums"]["finplan_session_status"]
+          tenant_id: string
+          updated_at: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          access_token: string
+          advisor_id: string
+          analyzed_at?: string | null
+          created_at?: string
+          customer_id: string
+          employment_type?:
+            | Database["public"]["Enums"]["finplan_employment_type"]
+            | null
+          expires_at?: string
+          id?: string
+          opened_at?: string | null
+          status?: Database["public"]["Enums"]["finplan_session_status"]
+          tenant_id: string
+          updated_at?: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          access_token?: string
+          advisor_id?: string
+          analyzed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          employment_type?:
+            | Database["public"]["Enums"]["finplan_employment_type"]
+            | null
+          expires_at?: string
+          id?: string
+          opened_at?: string | null
+          status?: Database["public"]["Enums"]["finplan_session_status"]
+          tenant_id?: string
+          updated_at?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finplan_sessions_advisor_id_fkey"
+            columns: ["advisor_id"]
+            isOneToOne: false
+            referencedRelation: "advisors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finplan_sessions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finplan_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finplan_uploads: {
+        Row: {
+          created_at: string
+          extract_error: string | null
+          extracted_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          kind: Database["public"]["Enums"]["finplan_doc_kind"]
+          mime_type: string | null
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          extract_error?: string | null
+          extracted_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          kind: Database["public"]["Enums"]["finplan_doc_kind"]
+          mime_type?: string | null
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          extract_error?: string | null
+          extracted_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          kind?: Database["public"]["Enums"]["finplan_doc_kind"]
+          mime_type?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finplan_uploads_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "finplan_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meetings: {
         Row: {
           advisor_id: string
@@ -546,6 +796,11 @@ export type Database = {
       }
       transcripts: {
         Row: {
+          cleaned_text: string | null
+          cleanup_corrections: Json | null
+          cleanup_latency_ms: number | null
+          cleanup_model: string | null
+          cleanup_tokens: number | null
           created_at: string
           id: string
           language: string
@@ -563,6 +818,11 @@ export type Database = {
           whisper_tokens: number | null
         }
         Insert: {
+          cleaned_text?: string | null
+          cleanup_corrections?: Json | null
+          cleanup_latency_ms?: number | null
+          cleanup_model?: string | null
+          cleanup_tokens?: number | null
           created_at?: string
           id?: string
           language?: string
@@ -580,6 +840,11 @@ export type Database = {
           whisper_tokens?: number | null
         }
         Update: {
+          cleaned_text?: string | null
+          cleanup_corrections?: Json | null
+          cleanup_latency_ms?: number | null
+          cleanup_model?: string | null
+          cleanup_tokens?: number | null
           created_at?: string
           id?: string
           language?: string
@@ -623,6 +888,16 @@ export type Database = {
       advisor_role: "advisor" | "tenant_admin" | "super_admin"
       assistant_role: "user" | "assistant"
       capture_method: "browser_live" | "file_upload"
+      finplan_doc_kind: "bank_statement" | "id_front" | "id_back" | "other"
+      finplan_employment_type: "employee" | "selfemployed"
+      finplan_session_status:
+        | "created"
+        | "opened"
+        | "uploading"
+        | "uploaded"
+        | "extracting"
+        | "analyzed"
+        | "failed"
       marital_status: "single" | "married" | "divorced" | "widowed"
       meeting_status:
         | "idle"
@@ -630,6 +905,8 @@ export type Database = {
         | "uploaded"
         | "transcribing"
         | "reconciling"
+        | "cleaning"
+        | "cleaned"
         | "extracting"
         | "extracted"
         | "generating"
@@ -761,14 +1038,22 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       advisor_role: ["advisor", "tenant_admin", "super_admin"],
       assistant_role: ["user", "assistant"],
       capture_method: ["browser_live", "file_upload"],
+      finplan_doc_kind: ["bank_statement", "id_front", "id_back", "other"],
+      finplan_employment_type: ["employee", "selfemployed"],
+      finplan_session_status: [
+        "created",
+        "opened",
+        "uploading",
+        "uploaded",
+        "extracting",
+        "analyzed",
+        "failed",
+      ],
       marital_status: ["single", "married", "divorced", "widowed"],
       meeting_status: [
         "idle",
@@ -776,6 +1061,8 @@ export const Constants = {
         "uploaded",
         "transcribing",
         "reconciling",
+        "cleaning",
+        "cleaned",
         "extracting",
         "extracted",
         "generating",

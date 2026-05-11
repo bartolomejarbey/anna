@@ -149,7 +149,18 @@ export interface ExtractResult<T> {
   model: string;
   tokensUsed: number;
   latencyMs: number;
+  /** Surový JSON parsed z GPT-4o (pre-Zod). Pro debug a fine-tuning. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawResponse: any;
+  /** Prvních ~8000 znaků vstupu, který šel do modelu. */
+  inputExcerpt: string;
+  /** System prompt poslaný do modelu. */
+  systemPrompt: string;
+  /** User message text poslaný do modelu. */
+  userPrompt: string;
 }
+
+const INPUT_EXCERPT_LIMIT = 8000;
 
 export async function extractBankStatement(
   file: FileBuffer,
@@ -187,13 +198,18 @@ export async function extractBankStatement(
 
   const raw = completion.choices[0]?.message?.content;
   if (!raw) throw new Error("Prázdná odpověď OpenAI při extrakci výpisu.");
-  const parsed = bankStatementSchema.parse(JSON.parse(raw));
+  const rawJson = JSON.parse(raw);
+  const parsed = bankStatementSchema.parse(rawJson);
 
   return {
     data: parsed,
     model: MODEL.extraction,
     tokensUsed: completion.usage?.total_tokens ?? 0,
     latencyMs: Date.now() - start,
+    rawResponse: rawJson,
+    inputExcerpt: `[binary ${isPdf ? "PDF" : "image"}: ${file.name}, ${file.buffer.length} bytes]`,
+    systemPrompt: BANK_STATEMENT_PROMPT,
+    userPrompt: `Výpis: ${file.name}`,
   };
 }
 
@@ -227,14 +243,13 @@ export async function extractBankStatementFromText(
   const start = Date.now();
   const client = openai();
 
+  const userPrompt = `Soubor: ${fileName}\n\nText výpisu:\n\n${text.slice(0, 80000)}`;
+
   const completion = await client.chat.completions.create({
     model: MODEL.extraction,
     messages: [
       { role: "system", content: BANK_STATEMENT_PROMPT },
-      {
-        role: "user",
-        content: `Soubor: ${fileName}\n\nText výpisu:\n\n${text.slice(0, 80000)}`,
-      },
+      { role: "user", content: userPrompt },
     ],
     response_format: {
       type: "json_schema",
@@ -244,13 +259,18 @@ export async function extractBankStatementFromText(
 
   const raw = completion.choices[0]?.message?.content;
   if (!raw) throw new Error("Prázdná odpověď OpenAI při extrakci výpisu.");
-  const parsed = bankStatementSchema.parse(JSON.parse(raw));
+  const rawJson = JSON.parse(raw);
+  const parsed = bankStatementSchema.parse(rawJson);
 
   return {
     data: parsed,
     model: MODEL.extraction,
     tokensUsed: completion.usage?.total_tokens ?? 0,
     latencyMs: Date.now() - start,
+    rawResponse: rawJson,
+    inputExcerpt: text.slice(0, INPUT_EXCERPT_LIMIT),
+    systemPrompt: BANK_STATEMENT_PROMPT,
+    userPrompt: userPrompt.slice(0, INPUT_EXCERPT_LIMIT),
   };
 }
 
@@ -260,11 +280,11 @@ export async function extractIdCard(
   const start = Date.now();
   const client = openai();
 
+  const userText =
+    "Vytáhni údaje z přiloženého občanského průkazu (může být přední i zadní strana).";
+
   const userContent = [
-    {
-      type: "text" as const,
-      text: "Vytáhni údaje z přiloženého občanského průkazu (může být přední i zadní strana).",
-    },
+    { type: "text" as const, text: userText },
     ...files.map((f) => ({
       type: "image_url" as const,
       image_url: { url: toDataUrl(f), detail: "high" as const },
@@ -285,12 +305,21 @@ export async function extractIdCard(
 
   const raw = completion.choices[0]?.message?.content;
   if (!raw) throw new Error("Prázdná odpověď OpenAI při extrakci OP.");
-  const parsed = idCardSchema.parse(JSON.parse(raw));
+  const rawJson = JSON.parse(raw);
+  const parsed = idCardSchema.parse(rawJson);
+
+  const fileSummary = files
+    .map((f) => `${f.name} (${f.mimeType}, ${f.buffer.length} B)`)
+    .join("\n");
 
   return {
     data: parsed,
     model: MODEL.extraction,
     tokensUsed: completion.usage?.total_tokens ?? 0,
     latencyMs: Date.now() - start,
+    rawResponse: rawJson,
+    inputExcerpt: `[image OP, ${files.length} stran]\n${fileSummary}`,
+    systemPrompt: ID_CARD_PROMPT,
+    userPrompt: userText,
   };
 }

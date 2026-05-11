@@ -120,6 +120,10 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
           model: result.model,
           tokens_used: result.tokensUsed,
           latency_ms: result.latencyMs,
+          raw_response: result.rawResponse,
+          input_excerpt: result.inputExcerpt,
+          system_prompt: result.systemPrompt,
+          user_prompt: result.userPrompt,
         });
 
         await admin
@@ -178,6 +182,10 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
           model: result.model,
           tokens_used: result.tokensUsed,
           latency_ms: result.latencyMs,
+          raw_response: result.rawResponse,
+          input_excerpt: result.inputExcerpt,
+          system_prompt: result.systemPrompt,
+          user_prompt: result.userPrompt,
         });
 
         await admin

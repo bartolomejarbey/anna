@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from '@phosphor-icons/react/dist/ssr';
-import { getFinplanAnalysis } from '@/lib/actions/finplan';
+import { getFinplanAnalysis, getFinplanDebug } from '@/lib/actions/finplan';
 import { PlanScreen } from '@/components/finplan/plan-screen';
+import { FinplanDebugPanel } from '@/components/finplan/debug-panel';
 import type { PlanData } from '@/lib/calculator/finplan/types';
 
 export const metadata = { title: 'Finanční plán — Anna' };
@@ -13,7 +14,10 @@ interface Props {
 
 export default async function FinplanDetailPage({ params }: Props) {
   const { id } = await params;
-  const analysis = await getFinplanAnalysis(id).catch(() => null);
+  const [analysis, debug] = await Promise.all([
+    getFinplanAnalysis(id).catch(() => null),
+    getFinplanDebug(id).catch(() => null),
+  ]);
 
   if (!analysis) {
     notFound();
@@ -37,6 +41,8 @@ export default async function FinplanDetailPage({ params }: Props) {
         sessionId={analysis.sessionId}
         notes={analysis.notes ?? ''}
       />
+
+      {debug && <FinplanDebugPanel bundle={debug} />}
     </div>
   );
 }
