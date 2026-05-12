@@ -429,13 +429,19 @@ export type Database = {
         Row: {
           bank_name: string | null
           created_at: string
+          detected_employment_type: string | null
+          detected_salary: number | null
+          discretionary_total: number | null
+          expense_breakdown: Json | null
           id: string
           id_address: string | null
           id_birth_date: string | null
           id_full_name: string | null
+          income_breakdown: Json | null
           input_excerpt: string | null
           latency_ms: number | null
           model: string | null
+          necessary_total: number | null
           period_months: number | null
           raw_response: Json | null
           session_id: string
@@ -450,13 +456,19 @@ export type Database = {
         Insert: {
           bank_name?: string | null
           created_at?: string
+          detected_employment_type?: string | null
+          detected_salary?: number | null
+          discretionary_total?: number | null
+          expense_breakdown?: Json | null
           id?: string
           id_address?: string | null
           id_birth_date?: string | null
           id_full_name?: string | null
+          income_breakdown?: Json | null
           input_excerpt?: string | null
           latency_ms?: number | null
           model?: string | null
+          necessary_total?: number | null
           period_months?: number | null
           raw_response?: Json | null
           session_id: string
@@ -471,13 +483,19 @@ export type Database = {
         Update: {
           bank_name?: string | null
           created_at?: string
+          detected_employment_type?: string | null
+          detected_salary?: number | null
+          discretionary_total?: number | null
+          expense_breakdown?: Json | null
           id?: string
           id_address?: string | null
           id_birth_date?: string | null
           id_full_name?: string | null
+          income_breakdown?: Json | null
           input_excerpt?: string | null
           latency_ms?: number | null
           model?: string | null
+          necessary_total?: number | null
           period_months?: number | null
           raw_response?: Json | null
           session_id?: string
@@ -519,6 +537,7 @@ export type Database = {
           expires_at: string
           id: string
           opened_at: string | null
+          privacy_mode: Database["public"]["Enums"]["finplan_privacy_mode"]
           status: Database["public"]["Enums"]["finplan_session_status"]
           tenant_id: string
           updated_at: string
@@ -536,6 +555,7 @@ export type Database = {
           expires_at?: string
           id?: string
           opened_at?: string | null
+          privacy_mode?: Database["public"]["Enums"]["finplan_privacy_mode"]
           status?: Database["public"]["Enums"]["finplan_session_status"]
           tenant_id: string
           updated_at?: string
@@ -553,6 +573,7 @@ export type Database = {
           expires_at?: string
           id?: string
           opened_at?: string | null
+          privacy_mode?: Database["public"]["Enums"]["finplan_privacy_mode"]
           status?: Database["public"]["Enums"]["finplan_session_status"]
           tenant_id?: string
           updated_at?: string
@@ -890,6 +911,7 @@ export type Database = {
       capture_method: "browser_live" | "file_upload"
       finplan_doc_kind: "bank_statement" | "id_front" | "id_back" | "other"
       finplan_employment_type: "employee" | "selfemployed"
+      finplan_privacy_mode: "full" | "categorized" | "aggregate_only"
       finplan_session_status:
         | "created"
         | "opened"
@@ -1045,6 +1067,7 @@ export const Constants = {
       capture_method: ["browser_live", "file_upload"],
       finplan_doc_kind: ["bank_statement", "id_front", "id_back", "other"],
       finplan_employment_type: ["employee", "selfemployed"],
+      finplan_privacy_mode: ["full", "categorized", "aggregate_only"],
       finplan_session_status: [
         "created",
         "opened",

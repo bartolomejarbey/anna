@@ -72,6 +72,7 @@ export default async function PlanPage({ params }: PageProps) {
         token={token}
         customerName={session.customerName}
         initialEmploymentType={session.employmentType}
+        initialPrivacyMode={session.privacyMode}
       />
 
       <footer className="mt-16 border-t border-border-subtle pt-8">

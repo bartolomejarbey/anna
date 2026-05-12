@@ -118,6 +118,34 @@ export interface Retirement {
   yearsInRetirement: number;
 }
 
+export type FinplanPrivacyMode = "full" | "categorized" | "aggregate_only";
+
+export interface IncomeBreakdownData {
+  salary: number;
+  selfEmployed: number;
+  rental: number;
+  passive: number;
+  other: number;
+}
+
+export interface ExpenseBreakdownData {
+  housing: number;
+  food: number;
+  transport: number;
+  insurance: number;
+  healthcare: number;
+  savings: number;
+  dining: number;
+  subscriptions: number;
+  discretionary: number;
+  other: number;
+}
+
+export interface CategorySummary {
+  necessary: number;
+  discretionary: number;
+}
+
 export interface PlanData {
   client: Client;
   cashflow: Cashflow;
@@ -125,4 +153,15 @@ export interface PlanData {
   retirement: Retirement;
   efa: EfaInsurance;
   efaInputs: EfaInputs;
+  /** Privacy mode zvolený zákazníkem na landing page. */
+  privacyMode: FinplanPrivacyMode;
+  /** Plné kategorie — vystaveno jen pokud privacyMode === 'full'. */
+  incomeBreakdown?: IncomeBreakdownData;
+  expenseBreakdown?: ExpenseBreakdownData;
+  /** Nutné/zbytné souhrn — vystaveno pro 'full' i 'categorized', NE pro 'aggregate_only'. */
+  categorySummary?: CategorySummary;
+  /** Detekovaná pravidelná čistá mzda (pokud byla rozpoznána). */
+  detectedSalary?: number | null;
+  /** AI-detekovaný typ zaměstnání. */
+  detectedEmploymentType?: "employee" | "selfemployed" | "unknown";
 }

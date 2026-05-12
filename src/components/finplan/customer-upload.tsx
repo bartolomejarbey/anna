@@ -10,6 +10,12 @@ import {
   X,
   CheckCircle,
   Spinner,
+  Eye,
+  ChartBar,
+  CircleHalf,
+  Info,
+  ShieldCheck,
+  Clock,
 } from '@phosphor-icons/react';
 import {
   listCustomerUploads,
@@ -22,11 +28,13 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 
 type UploadKind = 'bank_statement' | 'id_front' | 'id_back';
+type PrivacyMode = 'full' | 'categorized' | 'aggregate_only';
 
 interface Props {
   token: string;
   customerName: string;
   initialEmploymentType: 'employee' | 'selfemployed' | null;
+  initialPrivacyMode: PrivacyMode;
 }
 
 const ACCEPT: Record<UploadKind, Record<string, string[]>> = {
@@ -49,7 +57,12 @@ const ACCEPT: Record<UploadKind, Record<string, string[]>> = {
 
 const MAX_SIZE = 25 * 1024 * 1024; // 25 MB
 
-export function CustomerUpload({ token, customerName, initialEmploymentType }: Props) {
+export function CustomerUpload({
+  token,
+  customerName,
+  initialEmploymentType,
+  initialPrivacyMode,
+}: Props) {
   const router = useRouter();
   const [uploads, setUploads] = useState<UploadRow[]>([]);
   const [pendingUploads, setPendingUploads] = useState<Record<UploadKind, number>>({
@@ -60,8 +73,10 @@ export function CustomerUpload({ token, customerName, initialEmploymentType }: P
   const [employmentType, setEmploymentType] = useState<'employee' | 'selfemployed'>(
     initialEmploymentType ?? 'employee',
   );
+  const [privacyMode, setPrivacyMode] = useState<PrivacyMode>(initialPrivacyMode);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, startSubmit] = useTransition();
+  const [showFormDialog, setShowFormDialog] = useState(false);
 
   // Initial load
   useEffect(() => {
@@ -123,7 +138,7 @@ export function CustomerUpload({ token, customerName, initialEmploymentType }: P
     setError(null);
     startSubmit(async () => {
       try {
-        await submitFinplanSession({ token, employmentType });
+        await submitFinplanSession({ token, employmentType, privacyMode });
         router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -200,6 +215,39 @@ export function CustomerUpload({ token, customerName, initialEmploymentType }: P
         </div>
       </Section>
 
+      {/* 4. Privacy choice */}
+      <Section
+        index="4"
+        title="Co uvidí tvůj poradce?"
+        subtitle="Ty rozhoduješ, kolik detailů z výpisů uvidí poradce v plánu. Jednotlivé transakce ani protistrany se nikdy neukládají — bez ohledu na tvou volbu."
+      >
+        <div className="flex flex-col gap-3">
+          <PrivacyOption
+            icon={Eye}
+            label="Kategorizovaně"
+            description="Bydlení 22 000 Kč, jídlo 7 000 Kč, spoření 17 000 Kč… Poradce vidí, kam peníze tečou, ale ne konkrétní obchody nebo data."
+            active={privacyMode === 'full'}
+            onClick={() => setPrivacyMode('full')}
+          />
+          <PrivacyOption
+            icon={ChartBar}
+            label="Nutné vs. zbytné"
+            recommended
+            description="Souhrn 53 000 Kč nutné výdaje, 42 000 Kč zbytné. Bez detailních kategorií. Stačí pro dobré doporučení pojištění a důchodu."
+            active={privacyMode === 'categorized'}
+            onClick={() => setPrivacyMode('categorized')}
+          />
+          <PrivacyOption
+            icon={CircleHalf}
+            label="Pouze celkový součet"
+            description="Poradce vidí jen měsíční příjem a výdaj. Nedoporučujeme — bez detailu nejde určit, jestli má rezerva smysl."
+            warning
+            active={privacyMode === 'aggregate_only'}
+            onClick={() => setPrivacyMode('aggregate_only')}
+          />
+        </div>
+      </Section>
+
       {/* Submit */}
       <div className="mt-2 flex flex-col gap-4 border-t border-border-subtle pt-8">
         {error && (
@@ -224,6 +272,110 @@ export function CustomerUpload({ token, customerName, initialEmploymentType }: P
             )}
           </Button>
         </div>
+      </div>
+
+      {/* Alternativní cesta — fallback formulář */}
+      <button
+        type="button"
+        onClick={() => setShowFormDialog(true)}
+        className="fixed bottom-6 right-6 z-30 rounded-full border border-border-default bg-surface px-4 py-2 text-body-sm text-secondary shadow-sm transition-all hover:border-accent hover:text-primary md:bottom-8 md:right-8"
+        style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.04)' }}
+      >
+        Nechci posílat výpisy
+      </button>
+
+      {showFormDialog && (
+        <FormConfirmDialog
+          token={token}
+          onClose={() => setShowFormDialog(false)}
+          router={router}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Warning dialog: customer chce vyplnit ručně místo nahrávání výpisů
+
+function FormConfirmDialog({
+  token,
+  onClose,
+  router,
+}: {
+  token: string;
+  onClose: () => void;
+  router: ReturnType<typeof useRouter>;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-8"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[480px] rounded-[16px] border border-border-default bg-surface p-7"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          animation: 'anna-fade-scale-in 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        <h2 className="mb-3 text-h2 text-primary">Jste si jistý?</h2>
+        <p className="mb-5 text-body text-secondary">
+          Výpisy ušetří spoustu času a budeme mít jistotu, že analýza je opravdu přesná.
+          Je to stoprocentně bezpečné — soubory jsou šifrované, mažeme je po 30 dnech.
+        </p>
+
+        <div className="mb-6 flex flex-col gap-3">
+          <BenefitRow
+            icon={Clock}
+            title="15 sekund místo 15 minut"
+            body="Stačí nahrát PDF z internetbankingu. Vyplnit formulář ručně trvá déle."
+          />
+          <BenefitRow
+            icon={ShieldCheck}
+            title="Bezpečnější"
+            body="Soubory jsou šifrované při přenosu i v úložišti."
+          />
+          <BenefitRow
+            icon={CheckCircle}
+            title="Přesnější plán"
+            body="Z výpisů poznáme i to, co si nepamatuješ — třeba malé pravidelné platby."
+          />
+        </div>
+
+        <div className="flex flex-col gap-2 md:flex-row md:justify-end">
+          <Button variant="secondary" size="default" onClick={onClose}>
+            Vrátit se k výpisům
+          </Button>
+          <Button
+            variant="ghost"
+            size="default"
+            onClick={() => router.push(`/plan/${token}/formular`)}
+          >
+            Přesto vyplnit ručně
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BenefitRow({
+  icon: Icon,
+  title,
+  body,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: any;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Icon size={18} weight="regular" className="mt-0.5 flex-shrink-0 text-accent" />
+      <div className="flex flex-col gap-0.5">
+        <p className="text-body text-primary">{title}</p>
+        <p className="text-body-sm text-secondary">{body}</p>
       </div>
     </div>
   );
@@ -467,6 +619,83 @@ function SegmentBtn({
       )}
     >
       {children}
+    </button>
+  );
+}
+
+function PrivacyOption({
+  icon: Icon,
+  label,
+  description,
+  active,
+  onClick,
+  recommended,
+  warning,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: any;
+  label: string;
+  description: string;
+  active: boolean;
+  onClick: () => void;
+  recommended?: boolean;
+  warning?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'group relative flex w-full items-start gap-4 rounded-[12px] border bg-surface px-5 py-4 text-left transition-colors',
+        active
+          ? 'border-accent bg-accent-muted'
+          : 'border-border-subtle hover:border-border-default hover:bg-subtle',
+      )}
+      aria-pressed={active}
+    >
+      <Icon
+        size={22}
+        weight="regular"
+        className={cn(
+          'mt-0.5 flex-shrink-0',
+          active ? 'text-accent' : 'text-secondary',
+        )}
+      />
+      <div className="flex-1">
+        <div className="mb-1 flex items-center gap-2">
+          <span
+            className={cn(
+              'text-body font-medium',
+              active ? 'text-primary' : 'text-primary',
+            )}
+          >
+            {label}
+          </span>
+          {recommended && (
+            <span className="rounded-[4px] bg-accent-muted px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-accent">
+              Doporučujeme
+            </span>
+          )}
+          {warning && (
+            <span
+              className="inline-flex items-center gap-1 text-tertiary"
+              title="Bez kategorií poradce nevidí, jestli máš dost rezervy na neočekávané výdaje. Pojistné doporučení je pak hrubší."
+            >
+              <Info size={14} weight="regular" />
+            </span>
+          )}
+        </div>
+        <p className="text-body-sm text-secondary">{description}</p>
+      </div>
+      <span
+        className={cn(
+          'mt-1 h-4 w-4 flex-shrink-0 rounded-full border-2 transition-colors',
+          active
+            ? 'border-accent bg-accent'
+            : 'border-border-default bg-transparent',
+        )}
+        aria-hidden
+      />
     </button>
   );
 }

@@ -441,7 +441,10 @@ Pokud na 2+ otázek "ano" → komponenta není shippable.
 | Paralelní práce | Subagenty (`frontend-builder`, `supabase-expert`, `code-reviewer`) |
 | Po každé Write/Edit na `.ts` souboru | Typecheck: `npx tsc --noEmit` |
 | Po každé DB změně | Regenerovat types: `npx supabase gen types typescript` |
+| Po změně EFA matematiky | `npm run test:parity` (20/20 musí projít) |
 | Před commitem | Lint + typecheck + RLS test |
+
+**EFA matematika je 1:1 s Excelem.** Logika v `src/lib/calculator/finplan/calculations.ts` musí přesně odpovídat „Metodika výpočtu zajištění 2025.xlsx". Parity test je v `scripts/efa-excel-parity.mjs` — porovná 20 hodnot (Smrt × Inv.I/II/III pro celkové výdaje / nutné výdaje / příjem rodiny, plus mezivýpočty CF). Pokud změníš vzorce nebo defaulty v `calculations.ts`, MUSÍŠ zároveň aktualizovat mirror v parity scriptu. **Žádné magic numbers** (73/27 split, /0.72 income ratio) — všechno musí vycházet z AI-driven kategorizace v `extract-documents.ts` (rich breakdown) nebo z Excel parametrů.
 
 ---
 

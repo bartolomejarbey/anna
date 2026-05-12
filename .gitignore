@@ -48,3 +48,10 @@ next-env.d.ts
 # playwright MCP artifacts (screenshots/snapshots from local smoke tests)
 .playwright-mcp/
 /meeting-detail.png
+/wizard-*.png
+/upload-page-*.png
+/warning-dialog.png
+/plan-page-*.png
+
+# extraction test result fixtures (large, regenerated locally)
+/scripts/extraction-results*/

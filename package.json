@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:parity": "node scripts/efa-excel-parity.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -2,12 +2,22 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
-  extractBankStatementFromText,
+  extractBankStatementRichFromText,
   extractIdCard,
+  type BankStatementRichExtract,
 } from "./extract-documents";
 import { extractTextFromPdf } from "./parse-pdf";
-import { buildPlanFromAggregates, type BankAggregate, type IdInfo } from "@/lib/calculator/finplan/build-plan";
-import type { EmploymentType } from "@/lib/calculator/finplan/types";
+import {
+  buildPlanFromAggregates,
+  type BankAggregate,
+  type IdInfo,
+} from "@/lib/calculator/finplan/build-plan";
+import type {
+  EmploymentType,
+  FinplanPrivacyMode,
+} from "@/lib/calculator/finplan/types";
+import { formResponseDataSchema } from "./form-types";
+import { formToBankAggregate } from "./form-to-aggregate";
 
 const BUCKET = "finplan-docs";
 
@@ -19,11 +29,16 @@ interface UploadRow {
   mime_type: string | null;
 }
 
-async function downloadFile(filePath: string): Promise<{ buffer: Buffer; mimeType: string }> {
+async function downloadFile(filePath: string): Promise<{
+  buffer: Buffer;
+  mimeType: string;
+}> {
   const admin = supabaseAdmin();
   const { data, error } = await admin.storage.from(BUCKET).download(filePath);
   if (error || !data) {
-    throw new Error(`Nepodařilo se stáhnout soubor ${filePath}: ${error?.message}`);
+    throw new Error(
+      `Nepodařilo se stáhnout soubor ${filePath}: ${error?.message}`,
+    );
   }
   const arrayBuffer = await data.arrayBuffer();
   return {
@@ -33,17 +48,54 @@ async function downloadFile(filePath: string): Promise<{ buffer: Buffer; mimeTyp
 }
 
 /**
+ * Převod rich extrakce → BankAggregate (camelCase pro buildPlanFromAggregates).
+ */
+function toBankAggregate(d: BankStatementRichExtract): BankAggregate | null {
+  if (d.period_months == null) return null;
+  return {
+    periodMonths: d.period_months,
+    bankName: d.bank_name,
+    transactionCount: d.transaction_count ?? 0,
+    income: {
+      salary: d.income.salary,
+      selfEmployed: d.income.self_employed,
+      rental: d.income.rental,
+      passive: d.income.passive,
+      other: d.income.other,
+    },
+    expenses: {
+      housing: d.expenses.housing,
+      food: d.expenses.food,
+      transport: d.expenses.transport,
+      insurance: d.expenses.insurance,
+      healthcare: d.expenses.healthcare,
+      savings: d.expenses.savings,
+      dining: d.expenses.dining,
+      subscriptions: d.expenses.subscriptions,
+      discretionary: d.expenses.discretionary,
+      other: d.expenses.other,
+    },
+    necessaryTotal: d.necessary_total,
+    discretionaryTotal: d.discretionary_total,
+    detectedSalary: d.detected_salary_amount,
+    detectedEmploymentType: d.detected_employment_type,
+  };
+}
+
+/**
  * Hlavní pipeline pro session:
- *   1. Načti všechny uploads.
- *   2. Pro každý bank statement: download → extract text (PDF) nebo image → GPT-4o → finplan_extracted.
+ *   1. Načti všechny uploads + session metadata (privacy_mode, employment_type).
+ *   2. Pro každý bank statement: download → PDF → text → GPT-4o rich extract.
+ *      Ukládáme bohatý breakdown do finplan_extracted.
  *   3. Pro ID front+back společně: download obě → GPT-4o vision → finplan_extracted.
- *   4. Agregace → buildPlanFromAggregates → finplan_analyses.
+ *   4. Agregace → buildPlanFromAggregates(..., privacyMode) → finplan_analyses.
+ *      Privacy gating: 'full' vystaví detailní kategorie, 'categorized' jen
+ *      necessary/discretionary souhrn, 'aggregate_only' jen totály.
  *   5. Status session = 'analyzed'.
  */
 export async function runFinplanExtraction(sessionId: string): Promise<void> {
   const admin = supabaseAdmin();
 
-  // Update status: extracting
   await admin
     .from("finplan_sessions")
     .update({ status: "extracting" })
@@ -53,7 +105,7 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
     const { data: session, error: sessErr } = await admin
       .from("finplan_sessions")
       .select(
-        "id, tenant_id, advisor_id, customer_id, employment_type",
+        "id, tenant_id, advisor_id, customer_id, employment_type, privacy_mode",
       )
       .eq("id", sessionId)
       .single();
@@ -64,6 +116,19 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
 
     const employmentType: EmploymentType =
       (session.employment_type as EmploymentType) ?? "employee";
+    const privacyMode: FinplanPrivacyMode =
+      (session.privacy_mode as FinplanPrivacyMode) ?? "categorized";
+
+    // ---------- Detekce cesty: form fallback vs bank statements ----------
+    // Pokud customer submitted form response (cesta "Nechci posílat výpisy"),
+    // přeskočíme AI extrakci a postavíme aggregate přímo z formuláře.
+    const { data: formRow } = await admin
+      .from("finplan_form_responses")
+      .select("data, submitted_at")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    const isFormPath = !!formRow?.submitted_at;
 
     const { data: uploads, error: uplErr } = await admin
       .from("finplan_uploads")
@@ -76,25 +141,40 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
 
     const rows: UploadRow[] = (uploads ?? []) as UploadRow[];
 
-    // Bank statements
-    const bankUploads = rows.filter((r) => r.kind === "bank_statement");
+    // ---------- Bank statements (jen pokud není form path) ----------
+    const bankUploads = isFormPath
+      ? []
+      : rows.filter((r) => r.kind === "bank_statement");
     const bankAggregates: BankAggregate[] = [];
+
+    // ---------- Form fallback: aggregate z formuláře ----------
+    if (isFormPath && formRow) {
+      const parsed = formResponseDataSchema.safeParse(formRow.data);
+      if (parsed.success) {
+        const agg = formToBankAggregate(parsed.data, employmentType);
+        bankAggregates.push(agg);
+      }
+    }
 
     for (const upload of bankUploads) {
       try {
         const { buffer, mimeType } = await downloadFile(upload.file_path);
 
         let text = "";
-        if (mimeType === "application/pdf" || upload.file_name.toLowerCase().endsWith(".pdf")) {
+        if (
+          mimeType === "application/pdf" ||
+          upload.file_name.toLowerCase().endsWith(".pdf")
+        ) {
           text = await extractTextFromPdf(buffer);
         } else if (mimeType.startsWith("text/")) {
           text = buffer.toString("utf-8");
         } else {
-          // Image — TODO: pošli rovnou do vision. Pro MVP přeskočíme.
-          // (V praxi výpisy jsou skoro vždy PDF.)
           await admin
             .from("finplan_uploads")
-            .update({ extract_error: "Obrázkové výpisy zatím nepodporujeme. Nahrajte PDF." })
+            .update({
+              extract_error:
+                "Obrázkové výpisy zatím nepodporujeme. Nahrajte PDF.",
+            })
             .eq("id", upload.id);
           continue;
         }
@@ -102,21 +182,36 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
         if (!text || text.length < 50) {
           await admin
             .from("finplan_uploads")
-            .update({ extract_error: "PDF neobsahuje textovou vrstvu (skenovaný výpis)." })
+            .update({
+              extract_error: "PDF neobsahuje textovou vrstvu (skenovaný výpis).",
+            })
             .eq("id", upload.id);
           continue;
         }
 
-        const result = await extractBankStatementFromText(text, upload.file_name);
+        const result = await extractBankStatementRichFromText(
+          text,
+          upload.file_name,
+        );
+        const d = result.data;
 
         await admin.from("finplan_extracted").insert({
           upload_id: upload.id,
           session_id: sessionId,
-          total_income: result.data.total_income,
-          total_expenses: result.data.total_expenses,
-          period_months: result.data.period_months,
-          transaction_count: result.data.transaction_count,
-          bank_name: result.data.bank_name,
+          // Souhrnné agregáty (zpětně kompatibilní s existujícími sloupci)
+          total_income: d.income_total,
+          total_expenses: d.expense_total,
+          period_months: d.period_months,
+          transaction_count: d.transaction_count,
+          bank_name: d.bank_name,
+          // Bohatý breakdown (nové sloupce)
+          income_breakdown: d.income,
+          expense_breakdown: d.expenses,
+          necessary_total: d.necessary_total,
+          discretionary_total: d.discretionary_total,
+          detected_salary: d.detected_salary_amount,
+          detected_employment_type: d.detected_employment_type,
+          // Debug
           model: result.model,
           tokens_used: result.tokensUsed,
           latency_ms: result.latencyMs,
@@ -131,19 +226,8 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
           .update({ extracted_at: new Date().toISOString() })
           .eq("id", upload.id);
 
-        if (
-          result.data.total_income != null &&
-          result.data.total_expenses != null &&
-          result.data.period_months != null
-        ) {
-          bankAggregates.push({
-            totalIncome: result.data.total_income,
-            totalExpenses: result.data.total_expenses,
-            periodMonths: result.data.period_months,
-            transactionCount: result.data.transaction_count ?? 0,
-            bankName: result.data.bank_name,
-          });
-        }
+        const agg = toBankAggregate(d);
+        if (agg) bankAggregates.push(agg);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         await admin
@@ -153,7 +237,7 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
       }
     }
 
-    // ID card (kombinace front + back)
+    // ---------- ID card ----------
     const idUploads = rows.filter(
       (r) => r.kind === "id_front" || r.kind === "id_back",
     );
@@ -171,7 +255,6 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
 
         const result = await extractIdCard(buffers);
 
-        // Save agregát pod první upload row (typicky front)
         const firstUpload = idUploads[0]!;
         await admin.from("finplan_extracted").insert({
           upload_id: firstUpload.id,
@@ -213,14 +296,14 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
       }
     }
 
-    // Build PlanData
+    // ---------- PlanData (privacy-gated) ----------
     const planData = buildPlanFromAggregates({
       bankAggregates,
       id: idInfo,
       employmentType,
+      privacyMode,
     });
 
-    // Update customer name if we got it from ID
     if (idInfo?.fullName && idInfo.fullName.length >= 3) {
       await admin
         .from("customers")
@@ -228,21 +311,18 @@ export async function runFinplanExtraction(sessionId: string): Promise<void> {
         .eq("id", session.customer_id);
     }
 
-    // Upsert analysis
-    await admin
-      .from("finplan_analyses")
-      .upsert(
-        {
-          session_id: sessionId,
-          tenant_id: session.tenant_id,
-          advisor_id: session.advisor_id,
-          customer_id: session.customer_id,
-          monthly_income: planData.cashflow.income,
-          monthly_expenses: planData.cashflow.expenses,
-          plan_data: planData,
-        },
-        { onConflict: "session_id" },
-      );
+    await admin.from("finplan_analyses").upsert(
+      {
+        session_id: sessionId,
+        tenant_id: session.tenant_id,
+        advisor_id: session.advisor_id,
+        customer_id: session.customer_id,
+        monthly_income: planData.cashflow.income,
+        monthly_expenses: planData.cashflow.expenses,
+        plan_data: planData,
+      },
+      { onConflict: "session_id" },
+    );
 
     await admin
       .from("finplan_sessions")

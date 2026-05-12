@@ -23,6 +23,7 @@ export interface CustomerSessionInfo {
   status: string;
   expiresAt: string;
   employmentType: "employee" | "selfemployed" | null;
+  privacyMode: "full" | "categorized" | "aggregate_only";
 }
 
 const tokenSchema = z.string().min(20).max(64);
@@ -32,7 +33,7 @@ async function loadSessionByToken(token: string) {
   const { data, error } = await admin
     .from("finplan_sessions")
     .select(
-      "id, status, expires_at, employment_type, advisor_id, customer_id, customers(full_name), advisors(full_name)",
+      "id, status, expires_at, employment_type, privacy_mode, advisor_id, customer_id, customers(full_name), advisors(full_name)",
     )
     .eq("access_token", token)
     .maybeSingle();
@@ -67,6 +68,7 @@ export async function getCustomerSession(
     status: data.status,
     expiresAt: data.expires_at,
     employmentType: data.employment_type,
+    privacyMode: data.privacy_mode ?? "categorized",
   };
 }
 
@@ -209,13 +211,15 @@ export async function removeFinplanDocument(input: {
 const submitSchema = z.object({
   token: z.string().min(20).max(64),
   employmentType: z.enum(["employee", "selfemployed"]),
+  privacyMode: z.enum(["full", "categorized", "aggregate_only"]),
 });
 
 export async function submitFinplanSession(input: {
   token: string;
   employmentType: "employee" | "selfemployed";
+  privacyMode: "full" | "categorized" | "aggregate_only";
 }): Promise<{ sessionId: string }> {
-  const { token, employmentType } = submitSchema.parse(input);
+  const { token, employmentType, privacyMode } = submitSchema.parse(input);
   const session = await loadSessionByToken(token);
   const admin = supabaseAdmin();
 
@@ -239,6 +243,7 @@ export async function submitFinplanSession(input: {
       status: "uploaded",
       uploaded_at: new Date().toISOString(),
       employment_type: employmentType,
+      privacy_mode: privacyMode,
     })
     .eq("id", session.id);
 
