@@ -334,7 +334,6 @@ function IntroStep({
   return (
     <div className="flex flex-col gap-10">
       <header>
-        <p className="anna-section-rule mb-5" aria-hidden />
         <p className="mb-4 text-caption text-tertiary">Ruční vyplnění</p>
         <h1 className="mb-6 text-h1 text-primary">
           {customerName ? `${customerName.split(' ')[0]}, ` : ''}

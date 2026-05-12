@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import { StatusPill } from '@/components/ui/status-pill';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -23,26 +23,30 @@ interface MeetingStatusPillProps {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-type BadgeVariant = 'neutral' | 'success' | 'warning' | 'error';
+type Tone = 'neutral' | 'success' | 'warning' | 'error' | 'processing';
 
-const STATUS_CONFIG: Record<MeetingStatus, { label: string; variant: BadgeVariant }> = {
-  idle:         { label: 'Připraveno',           variant: 'neutral'  },
-  recording:    { label: 'Nahráváme',            variant: 'warning'  },
-  uploaded:     { label: 'Nahráno',              variant: 'neutral'  },
-  transcribing: { label: 'Přepisujeme',          variant: 'warning'  },
-  reconciling:  { label: 'Slaďujeme přepis',     variant: 'warning'  },
-  cleaning:     { label: 'Čistíme přepis',       variant: 'warning'  },
-  cleaned:      { label: 'Přepis čistý',         variant: 'neutral'  },
-  extracting:   { label: 'Vytahujeme data',      variant: 'warning'  },
-  extracted:    { label: 'Data připravena',      variant: 'neutral'  },
-  generating:   { label: 'Vytváříme nabídku',    variant: 'warning'  },
-  ready:        { label: 'Hotovo',               variant: 'success'  },
-  failed:       { label: 'Chyba',                variant: 'error'    },
+const STATUS_CONFIG: Record<MeetingStatus, { label: string; tone: Tone; dot?: boolean }> = {
+  idle:         { label: 'Připraveno',           tone: 'neutral'    },
+  recording:    { label: 'Nahráváme',            tone: 'processing', dot: true },
+  uploaded:     { label: 'Nahráno',              tone: 'neutral'    },
+  transcribing: { label: 'Přepisujeme',          tone: 'processing', dot: true },
+  reconciling:  { label: 'Slaďujeme přepis',     tone: 'processing', dot: true },
+  cleaning:     { label: 'Čistíme přepis',       tone: 'processing', dot: true },
+  cleaned:      { label: 'Přepis čistý',         tone: 'neutral'    },
+  extracting:   { label: 'Vytahujeme data',      tone: 'processing', dot: true },
+  extracted:    { label: 'Data připravena',      tone: 'neutral'    },
+  generating:   { label: 'Vytváříme nabídku',    tone: 'processing', dot: true },
+  ready:        { label: 'Hotovo',               tone: 'success', dot: true },
+  failed:       { label: 'Chyba',                tone: 'error', dot: true },
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function MeetingStatusPill({ status }: MeetingStatusPillProps): React.ReactElement {
-  const { label, variant } = STATUS_CONFIG[status];
-  return <Badge variant={variant}>{label}</Badge>;
+  const { label, tone, dot } = STATUS_CONFIG[status];
+  return (
+    <StatusPill tone={tone} dot={dot}>
+      {label}
+    </StatusPill>
+  );
 }

@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { LiveRecorder } from '@/components/live-recorder';
 import { AudioUploader } from '@/components/audio-uploader';
 import {
@@ -162,14 +163,14 @@ export function NewMeetingShell({
         <section className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <p className="text-caption text-tertiary">2 · Nahrávka</p>
-            <div className="inline-flex self-start rounded-[8px] border border-border-subtle p-0.5">
+            <div className="inline-flex self-start rounded-full bg-subtle p-1">
               <button
                 type="button"
                 onClick={() => setMode('live')}
                 className={cn(
-                  'h-9 rounded-[6px] px-4 text-body-sm font-medium transition-colors',
+                  'h-8 rounded-full px-4 text-body-sm font-medium transition-colors',
                   mode === 'live'
-                    ? 'bg-inset text-primary'
+                    ? 'bg-surface text-primary shadow-[0_1px_3px_rgba(0,0,0,0.06)]'
                     : 'text-tertiary hover:text-secondary',
                 )}
               >
@@ -179,9 +180,9 @@ export function NewMeetingShell({
                 type="button"
                 onClick={() => setMode('file')}
                 className={cn(
-                  'h-9 rounded-[6px] px-4 text-body-sm font-medium transition-colors',
+                  'h-8 rounded-full px-4 text-body-sm font-medium transition-colors',
                   mode === 'file'
-                    ? 'bg-inset text-primary'
+                    ? 'bg-surface text-primary shadow-[0_1px_3px_rgba(0,0,0,0.06)]'
                     : 'text-tertiary hover:text-secondary',
                 )}
               >
@@ -222,21 +223,8 @@ export function NewMeetingShell({
             </p>
           )}
 
-          <div className="flex items-center gap-6">
-            <button
-              type="button"
-              onClick={handleContinue}
-              className={cn(
-                'h-10 rounded-[8px] bg-accent px-4 text-body font-medium text-accent-text',
-                'transition-opacity hover:opacity-90 active:scale-[0.98]',
-              )}
-              style={{
-                transitionDuration: '150ms',
-                transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)',
-              }}
-            >
-              Pokračovat
-            </button>
+          <div className="flex items-center gap-4">
+            <Button onClick={handleContinue}>Pokračovat</Button>
             <button
               type="button"
               onClick={handleDiscard}

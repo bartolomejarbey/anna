@@ -4,6 +4,7 @@ import { ArrowLeft } from '@phosphor-icons/react/dist/ssr';
 import { getFinplanAnalysis, getFinplanDebug } from '@/lib/actions/finplan';
 import { PlanScreen } from '@/components/finplan/plan-screen';
 import { FinplanDebugPanel } from '@/components/finplan/debug-panel';
+import { PageShell } from '@/components/ui/page-shell';
 import type { PlanData } from '@/lib/calculator/finplan/types';
 
 export const metadata = { title: 'Finanční plán — Anna' };
@@ -26,10 +27,10 @@ export default async function FinplanDetailPage({ params }: Props) {
   const planData = analysis.planData as PlanData;
 
   return (
-    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+    <PageShell>
       <Link
         href="/financni-plan"
-        className="mb-8 inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary"
+        className="mt-10 mb-2 inline-flex items-center gap-1.5 text-body-sm text-tertiary transition-colors hover:text-primary"
       >
         <ArrowLeft size={14} weight="regular" />
         Plány
@@ -43,6 +44,6 @@ export default async function FinplanDetailPage({ params }: Props) {
       />
 
       {debug && <FinplanDebugPanel bundle={debug} />}
-    </div>
+    </PageShell>
   );
 }

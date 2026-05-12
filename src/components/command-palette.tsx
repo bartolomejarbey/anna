@@ -56,9 +56,9 @@ export function CommandPalette({ open, onClose, customers, recentMeetings, showA
         if (!o) onClose();
       }}
       label="Hledat v Anně"
-      overlayClassName="fixed inset-0 z-50 bg-black/15"
+      overlayClassName="fixed inset-0 z-50 bg-black/20"
       contentClassName="fixed left-1/2 top-[15%] z-50 w-[640px] max-w-[calc(100vw-32px)] -translate-x-1/2"
-      className="cmdk-palette anna-fade-scale-in flex flex-col overflow-hidden rounded-[16px] border border-border-default bg-surface"
+      className="cmdk-palette anna-fade-scale-in flex flex-col overflow-hidden rounded-[14px] border border-border-subtle bg-surface shadow-[0_24px_64px_rgba(0,0,0,0.16)]"
     >
       <Command.Input placeholder="Co hledáš?" />
       <Command.List>

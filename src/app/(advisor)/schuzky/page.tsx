@@ -4,8 +4,10 @@ import { getMeetingsList } from '@/lib/actions/meetings';
 import { MeetingStatusPill } from '@/components/meeting-status-pill';
 import type { MeetingStatus } from '@/components/meeting-status-pill';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
+import { ListRow } from '@/components/ui/list-row';
 
 export const metadata = {
   title: 'Schůzky — Anna',
@@ -22,13 +24,16 @@ export default async function SchuzkyPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
-      <div className="mb-12 flex items-center justify-between">
-        <h1 className="text-h1 text-primary">Schůzky</h1>
-        <Link href="/schuzky/nova">
-          <Button>Nová schůzka</Button>
-        </Link>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Schůzky"
+        description="Nahrané akviziční schůzky se zákazníky."
+        actions={
+          <Link href="/schuzky/nova">
+            <Button>Nová schůzka</Button>
+          </Link>
+        }
+      />
 
       {dbError && (
         <p className="mb-8 text-body text-secondary">
@@ -40,12 +45,13 @@ export default async function SchuzkyPage() {
         <EmptyState
           icon={Microphone}
           heading="Žádná schůzka."
+          description="Začni novou nahrávkou — Anna ji přepíše a vytáhne data."
           action={{ label: 'Začít schůzku', href: '/schuzky/nova' }}
         />
       )}
 
       {meetings.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <ul className="divide-y divide-border-subtle">
           {meetings.map((m) => {
             const date = new Date(m.created_at).toLocaleDateString('cs-CZ', {
               day: 'numeric',
@@ -54,24 +60,18 @@ export default async function SchuzkyPage() {
             });
 
             return (
-              <Link key={m.id} href={`/schuzky/${m.id}`}>
-                <Card
-                  variant="compact"
-                  className="flex items-center justify-between transition-colors hover:border-border-default cursor-pointer"
-                >
-                  <div className="flex flex-col gap-1">
-                    <p className="text-body font-medium text-primary">
-                      {m.customer_name ?? 'Neznámý zákazník'}
-                    </p>
-                    <p className="text-body-sm text-tertiary">{date}</p>
-                  </div>
-                  <MeetingStatusPill status={m.status as MeetingStatus} />
-                </Card>
-              </Link>
+              <li key={m.id}>
+                <ListRow
+                  href={`/schuzky/${m.id}`}
+                  primary={m.customer_name ?? 'Neznámý zákazník'}
+                  secondary={date}
+                  trailing={<MeetingStatusPill status={m.status as MeetingStatus} />}
+                />
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
-    </div>
+    </PageShell>
   );
 }

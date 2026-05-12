@@ -3,6 +3,8 @@ import { ArrowLeft } from '@phosphor-icons/react/dist/ssr';
 import { currentAdvisorId } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { ShareLinkPanel } from '@/components/finplan/share-link-panel';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
 
 export const metadata = { title: 'Odkaz pro zákazníka — Anna' };
 
@@ -33,12 +35,12 @@ export default async function SharePlanPage({ params }: Props) {
 
   if (!data) {
     return (
-      <div className="mx-auto w-full max-w-[640px] px-8 py-16">
-        <p className="text-body text-primary">Plán nenalezen.</p>
+      <PageShell width="narrow">
+        <p className="mt-20 text-body text-primary">Plán nenalezen.</p>
         <Link href="/financni-plan" className="mt-4 inline-block text-body-sm text-accent">
           Zpět na plány
         </Link>
-      </div>
+      </PageShell>
     );
   }
 
@@ -52,23 +54,22 @@ export default async function SharePlanPage({ params }: Props) {
   const url = `${normalizedBase}/plan/${data.access_token}`;
 
   return (
-    <div className="mx-auto w-full max-w-[640px] px-8 py-16">
+    <PageShell width="narrow">
       <Link
         href="/financni-plan"
-        className="mb-8 inline-flex items-center gap-2 text-body-sm text-secondary hover:text-primary"
+        className="mt-10 mb-2 inline-flex items-center gap-1.5 text-body-sm text-tertiary transition-colors hover:text-primary"
       >
         <ArrowLeft size={14} weight="regular" />
         Plány
       </Link>
 
-      <p className="anna-section-rule mb-5" aria-hidden />
-      <p className="mb-3 text-caption text-tertiary">Finanční plán</p>
-      <h1 className="mb-3 text-h1 text-primary">{customer?.full_name ?? 'Zákazník'}</h1>
-      <p className="mb-12 text-prose text-secondary">
-        {STATUS_LABEL[data.status] ?? data.status}
-      </p>
+      <PageHeader
+        eyebrow="Finanční plán"
+        title={customer?.full_name ?? 'Zákazník'}
+        description={STATUS_LABEL[data.status] ?? data.status}
+      />
 
       <ShareLinkPanel url={url} />
-    </div>
+    </PageShell>
   );
 }

@@ -16,7 +16,7 @@ export function SelectTrigger({ className, children, ...props }: SelectTriggerPr
   return (
     <RadixSelect.Trigger
       className={cn(
-        'flex h-10 w-full items-center justify-between rounded-[8px] border border-border-default bg-surface px-3 text-body text-primary placeholder:text-tertiary focus:outline-none focus:border-accent data-[placeholder]:text-tertiary transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-11 w-full items-center justify-between rounded-[12px] border border-border-subtle bg-surface px-4 text-body text-primary placeholder:text-tertiary focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 data-[placeholder]:text-tertiary transition-colors disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}
@@ -38,7 +38,7 @@ export function SelectContent({ className, children, position = 'popper', ...pro
     <RadixSelect.Portal>
       <RadixSelect.Content
         className={cn(
-          'relative z-50 min-w-[8rem] overflow-hidden rounded-[12px] border border-border-subtle bg-surface',
+          'relative z-50 min-w-[8rem] overflow-hidden rounded-[14px] border border-border-subtle bg-surface shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
           position === 'popper' && 'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
           className,
         )}
@@ -48,7 +48,7 @@ export function SelectContent({ className, children, position = 'popper', ...pro
         <RadixSelect.ScrollUpButton className="flex items-center justify-center py-1 text-tertiary">
           <CaretUp size={14} weight="regular" />
         </RadixSelect.ScrollUpButton>
-        <RadixSelect.Viewport className="p-1">{children}</RadixSelect.Viewport>
+        <RadixSelect.Viewport className="p-1.5">{children}</RadixSelect.Viewport>
         <RadixSelect.ScrollDownButton className="flex items-center justify-center py-1 text-tertiary">
           <CaretDown size={14} weight="regular" />
         </RadixSelect.ScrollDownButton>
@@ -65,14 +65,14 @@ export function SelectItem({ className, children, ...props }: SelectItemProps) {
   return (
     <RadixSelect.Item
       className={cn(
-        'relative flex w-full cursor-default select-none items-center rounded-[6px] py-2 pl-8 pr-3 text-body text-primary outline-none focus:bg-subtle data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex w-full cursor-default select-none items-center rounded-[10px] py-2 pl-8 pr-3 text-body text-primary outline-none focus:bg-subtle data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}
       {...props}
     >
       <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
         <RadixSelect.ItemIndicator>
-          <Check size={14} weight="regular" />
+          <Check size={14} weight="regular" className="text-accent" />
         </RadixSelect.ItemIndicator>
       </span>
       <RadixSelect.ItemText>{children}</RadixSelect.ItemText>

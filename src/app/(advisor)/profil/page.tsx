@@ -1,8 +1,9 @@
 import { currentAdvisor } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { LogoutButton } from '@/components/logout-button';
+import { Avatar } from '@/components/ui/avatar';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
 
 export const metadata = { title: 'Profil — Anna' };
 
@@ -11,6 +12,20 @@ const ROLE_LABELS: Record<string, string> = {
   tenant_admin: 'Admin sítě',
   super_admin: 'Super admin',
 };
+
+interface DetailRowProps {
+  label: string;
+  value: string;
+}
+
+function DetailRow({ label, value }: DetailRowProps) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-4">
+      <span className="text-body-sm text-tertiary">{label}</span>
+      <span className="text-body text-primary">{value}</span>
+    </div>
+  );
+}
 
 export default async function ProfilPage() {
   const advisor = await currentAdvisor();
@@ -29,40 +44,25 @@ export default async function ProfilPage() {
   const roleLabel = advisor ? ROLE_LABELS[advisor.role] ?? advisor.role : 'Poradce';
 
   return (
-    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
-      <h1 className="text-h1 text-primary mb-12">Profil</h1>
+    <PageShell width="narrow">
+      <PageHeader title="Profil" description="Tvé údaje a nastavení účtu." />
 
-      <div className="max-w-md">
-        <Card>
-          <CardContent className="mt-0">
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-1.5">
-                <Label>Jméno</Label>
-                <p className="text-body text-primary">{advisor?.full_name ?? '—'}</p>
-              </div>
-              <div className="h-px bg-border-subtle" />
-              <div className="flex flex-col gap-1.5">
-                <Label>E-mail</Label>
-                <p className="text-body text-primary">{advisor?.email ?? '—'}</p>
-              </div>
-              <div className="h-px bg-border-subtle" />
-              <div className="flex flex-col gap-1.5">
-                <Label>Role</Label>
-                <p className="text-body text-primary">{roleLabel}</p>
-              </div>
-              <div className="h-px bg-border-subtle" />
-              <div className="flex flex-col gap-1.5">
-                <Label>Síť</Label>
-                <p className="text-body text-primary">{tenantName}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="mt-8">
-          <LogoutButton />
+      <div className="flex items-center gap-4 py-6">
+        <Avatar name={advisor?.full_name ?? 'Anna'} size="lg" />
+        <div>
+          <p className="text-h3 text-primary">{advisor?.full_name ?? '—'}</p>
+          <p className="text-body-sm text-tertiary">{advisor?.email ?? '—'}</p>
         </div>
       </div>
-    </div>
+
+      <div className="divide-y divide-border-subtle border-y border-border-subtle">
+        <DetailRow label="Role" value={roleLabel} />
+        <DetailRow label="Síť" value={tenantName} />
+      </div>
+
+      <div className="mt-10">
+        <LogoutButton />
+      </div>
+    </PageShell>
   );
 }

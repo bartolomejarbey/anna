@@ -1,40 +1,34 @@
 import Link from 'next/link';
-import { TypewriterPrompts } from './typewriter-prompts';
 import { AnnaPromptInput } from './anna-prompt-input';
-
-const HERO_PROMPTS = [
-  'Analýza potřeb zákazníka...',
-  'Příprava nabídky pro klienta...',
-  'Shrnutí poslední schůzky...',
-  'Psaní e-mailu zákazníkovi...',
-  'Vytvoření newsletteru...',
-] as const;
 
 export function HeroBlock() {
   return (
-    <section className="relative z-10 mx-auto flex min-h-[80vh] max-w-[1100px] flex-col justify-center py-32">
-      <h1 className="mb-12 text-hero-serif text-primary">
-        S čím ti dnes mohu pomoci?
-      </h1>
-
-      <div className="mb-10 h-[40px] font-sans text-[24px] leading-[1.4] text-secondary">
-        <TypewriterPrompts prompts={HERO_PROMPTS} />
+    <section className="flex flex-col gap-8 pb-16 pt-20 md:pt-28">
+      <div className="flex flex-col gap-4">
+        <span className="text-caption text-tertiary">Co dnes potřebuješ</span>
+        <h1 className="text-hero-sm text-primary md:text-hero">
+          Anna ti pomůže.
+        </h1>
+        <p className="max-w-[52ch] text-body-lg text-secondary">
+          Nahraj schůzku, vytvoř finanční plán nebo se zeptej na cokoliv. Anna umí
+          shrnutí, návrhy a textování pro klienty.
+        </p>
       </div>
 
-      <AnnaPromptInput />
+      <div className="max-w-[640px]">
+        <AnnaPromptInput />
+      </div>
 
-      <div className="mt-8 flex items-center gap-2 text-[14px] text-tertiary">
-        <span>Rychlé akce:</span>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-body-sm text-tertiary">
+        <span>Rychlé akce</span>
         <Link href="/schuzky/nova" className="transition-colors hover:text-accent">
           Nahrát schůzku
         </Link>
-        <span aria-hidden>·</span>
-        <Link href="/zakaznici" className="transition-colors hover:text-accent">
-          Nový zákazník
+        <Link href="/financni-plan/novy" className="transition-colors hover:text-accent">
+          Nový finanční plán
         </Link>
-        <span aria-hidden>·</span>
-        <Link href="/nabidky" className="transition-colors hover:text-accent">
-          Vytvořit nabídku
+        <Link href="/zakaznici" className="transition-colors hover:text-accent">
+          Zákazníci
         </Link>
       </div>
     </section>

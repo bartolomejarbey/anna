@@ -31,7 +31,6 @@ export function NotesPanel({ sessionId, initialNotes }: Props) {
 
   return (
     <section>
-      <p className="anna-section-rule mb-5" aria-hidden />
       <h2 className="mb-2 text-h2 text-primary">Poznámky</h2>
       <p className="mb-6 text-prose text-secondary">
         Tvoje interní poznámky k plánu. Zákazník je neuvidí.

@@ -7,6 +7,9 @@ import {
 import { CustomerUpload } from '@/components/finplan/customer-upload';
 import { PlanThanks } from '@/components/finplan/plan-thanks';
 import { PlanError } from '@/components/finplan/plan-error';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
+import { AnnaWordmark } from '@/components/brand/anna-wordmark';
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -23,7 +26,6 @@ export default async function PlanPage({ params }: PageProps) {
     return <PlanError message={msg} />;
   }
 
-  // Fire-and-forget: označ jako otevřený. Pokud spadne, nezablokujeme stránku.
   void markSessionOpened(token).catch(() => {});
 
   if (
@@ -34,21 +36,24 @@ export default async function PlanPage({ params }: PageProps) {
     return <PlanThanks customerName={session.customerName} advisorName={session.advisorName} />;
   }
 
+  const firstName = session.customerName ? session.customerName.split(' ')[0] : null;
+
   return (
-    <div className="mx-auto w-full max-w-[760px] px-6 pt-20 pb-24 md:px-8">
-      <header className="mb-16">
-        <p className="anna-section-rule mb-5" aria-hidden />
-        <p className="mb-4 text-caption text-tertiary">Finanční plán</p>
-        <h1 className="mb-6 text-h1 text-primary">
-          {session.customerName ? `${session.customerName.split(' ')[0]}, ` : ''}
-          tvůj poradce {session.advisorName} tě požádal o pár dokumentů.
-        </h1>
-        <p className="text-prose text-secondary">
-          Nahrávat budeš výpisy z účtu za posledních 12 měsíců a fotku občanského průkazu.
-          Z dokumentů spočítáme tvůj finanční plán &mdash; cashflow, pojistné krytí, doporučení na
-          penzi. Trvá to obvykle 30 sekund.
-        </p>
-      </header>
+    <PageShell width="narrow">
+      <div className="pt-12 pb-2">
+        <AnnaWordmark size="sm" />
+      </div>
+
+      <PageHeader
+        eyebrow="Finanční plán"
+        title={
+          firstName
+            ? `${firstName}, ${session.advisorName} tě požádal o pár dokumentů.`
+            : `${session.advisorName} tě požádal o pár dokumentů.`
+        }
+        description="Nahraj výpisy z účtu za posledních 12 měsíců a fotku občanského průkazu. Z dokumentů Anna spočítá cashflow, pojistné krytí a doporučení na penzi. Trvá to obvykle 30 sekund."
+        variant="default"
+      />
 
       <section className="mb-12 grid gap-3 md:grid-cols-3">
         <PrivacyTile
@@ -75,7 +80,7 @@ export default async function PlanPage({ params }: PageProps) {
         initialPrivacyMode={session.privacyMode}
       />
 
-      <footer className="mt-16 border-t border-border-subtle pt-8">
+      <footer className="mt-16 border-t border-border-subtle pt-8 pb-16">
         <div className="flex items-start gap-3 text-body-sm text-tertiary">
           <IdentificationCard size={18} weight="regular" className="mt-0.5 flex-shrink-0" />
           <p className="max-w-[60ch]">
@@ -84,7 +89,7 @@ export default async function PlanPage({ params }: PageProps) {
           </p>
         </div>
       </footer>
-    </div>
+    </PageShell>
   );
 }
 
@@ -99,7 +104,7 @@ function PrivacyTile({
   body: string;
 }) {
   return (
-    <div className="rounded-[12px] border border-border-subtle bg-surface p-5">
+    <div className="rounded-[14px] border border-border-subtle bg-surface p-5">
       <Icon size={20} weight="regular" className="mb-3 text-accent" />
       <p className="mb-1 text-body font-medium text-primary">{title}</p>
       <p className="text-body-sm text-secondary">{body}</p>

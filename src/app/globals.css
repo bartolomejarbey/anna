@@ -1,80 +1,89 @@
-@import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&f[]=jetbrains-mono@400,500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Backgrounds — vrstvená cream */
-  --color-canvas: #faf6f0;
-  --color-surface: #ffffff;
-  --color-subtle: #f2ebe0;
-  --color-inset: #e8dfcf;
+  /* ─── Apple-style palette (Lukášův Finplan 2 brand) ─────────────────
+     Ink/canvas/blue. Wine zachováno JEN na Anna wordmark přes
+     --color-wordmark (single brand DNA detail). */
+
+  /* Backgrounds */
+  --color-canvas: #fbfbfd;        /* near-white, Apple's eye-friendly */
+  --color-surface: #ffffff;       /* cards, modals */
+  --color-subtle: #f5f5f7;        /* hover, secondary surfaces */
+  --color-inset: #efeff1;         /* nested, code blocks */
 
   /* Borders */
-  --color-border-subtle: #e5dcc9;
-  --color-border-default: #c9bca1;
-  --color-border-strong: #1a1a1a;
+  --color-border-subtle: #e5e5ea; /* line — Apple's gray-5 */
+  --color-border-default: #d2d2d7;/* Apple's gray-4 */
+  --color-border-strong: #1d1d1f; /* ink, emphasized */
 
   /* Text */
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #5a5045;
-  --color-text-tertiary: #8c8276;
-  --color-text-disabled: #b5ab99;
+  --color-text-primary: #1d1d1f;   /* ink */
+  --color-text-secondary: #515154; /* near-ink */
+  --color-text-tertiary: #86868b;  /* muted — Apple's gray-1 */
+  --color-text-disabled: #b5b5b8;
 
-  /* Accent — wine, jediný akcent v UI */
-  --color-accent: #6b1f2e;
-  --color-accent-hover: #561620;
-  --color-accent-muted: rgba(107, 31, 46, 0.15);
-  --color-accent-text: #faf6f0;
+  /* Accent — Apple system blue */
+  --color-accent: #0071e3;
+  --color-accent-hover: #0051a2;
+  --color-accent-muted: rgba(0, 113, 227, 0.08);
+  --color-accent-text: #ffffff;
 
-  /* Sémantické tinty — decorace + status only, NIKDY CTA, NIKDY text */
-  --color-sage: #5c7a6b;
-  --color-sage-bg: rgba(92, 122, 107, 0.18);
+  /* Wordmark — wine, used ONLY pro Anna wordmark underline */
+  --color-wordmark: #6b1f2e;
 
-  --color-ochre: #9b7a1a;
-  --color-ochre-bg: rgba(155, 122, 26, 0.18);
+  /* Functional — Apple system colors */
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  --color-error: #ff3b30;
 
-  /* Warm brown — decorative depth ONLY (mesh layers, corner accents, section rule) */
-  --color-warmbrown: #8c7355;
-  --color-warmbrown-deep: #6b5742;
-  --color-warmbrown-bg: rgba(140, 115, 85, 0.20);
+  --color-success-bg: rgba(52, 199, 89, 0.10);
+  --color-warning-bg: rgba(255, 149, 0, 0.10);
+  --color-error-bg: rgba(255, 59, 48, 0.10);
 
-  /* Functional — success sjednocen na sage */
-  --color-success: #5c7a6b;
-  --color-warning: #9b7a1a;
-  --color-error: #6b1f2e;
-
-  /* Functional backgrounds — 10 % alpha */
-  --color-success-bg: rgba(92, 122, 107, 0.1);
-  --color-warning-bg: rgba(155, 122, 26, 0.1);
-  --color-error-bg: rgba(107, 31, 46, 0.1);
-
-  /* Fonts */
-  --font-sans: 'General Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-serif: 'Instrument Serif', 'Georgia', serif;
+  /* Fonts — Inter loaded přes next/font/google v src/app/layout.tsx */
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Georgia', serif;  /* Anna wordmark only */
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Easings */
+  /* Easings — Apple-style spring-out */
   --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-sharp: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-soft-bounce: cubic-bezier(0.34, 1.4, 0.64, 1);
 
-  /* Radius */
-  --radius-input: 8px;
-  --radius-button: 8px;
-  --radius-card: 12px;
-  --radius-tool: 16px;
+  /* Radius — Apple proportions */
+  --radius-input: 12px;
+  --radius-button: 980px;   /* pill (Apple convention) */
+  --radius-card: 18px;
+  --radius-tool: 18px;
 
-  --container-content: 1280px;
+  --container-content: 1024px;  /* max-w-5xl jako Lukáš */
 }
 
-/* ─── Pass 5 — editorial type scale (8 utilities, 3.5× ratchet body→hero) ───
-   Hero serif italic 84 → H1 serif italic 48 → Stat serif roman 56
-   → H2 sans 28 → H3 sans 20 → Body sans 16 (72ch) → Body-sm sans 13
-   → Caption sans 12 0.12em uppercase. Plus mono + wordmark holdouts. */
+/* ─── Type scale — Apple editorial ───────────────────────────────
+   Hero 72 → Hero-sm 56 → H1 40 → H2 28 → H3 20 → Body-lg 17
+   → Body 15 → Body-sm 13 → Caption 12 0.12em. Vše Inter, kromě
+   wordmark a stat (volitelně serif pro hero čísla). */
+
+@utility text-hero {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+@utility text-hero-sm {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
 
 @utility text-hero-serif {
   font-family: var(--font-serif);
-  font-style: normal;
   font-weight: 400;
   font-size: 72px;
   line-height: 1.05;
@@ -82,51 +91,64 @@
 }
 
 @utility text-h1 {
-  font-family: var(--font-serif);
-  font-style: normal;
-  font-weight: 400;
-  font-size: 48px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 40px;
   line-height: 1.1;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
 @utility text-h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 28px;
   line-height: 1.2;
-  font-weight: 500;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.015em;
 }
 
 @utility text-h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 20px;
   line-height: 1.3;
-  font-weight: 500;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
+}
+
+@utility text-body-lg {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0;
 }
 
 @utility text-body {
-  font-size: 16px;
-  line-height: 1.55;
+  font-family: var(--font-sans);
   font-weight: 400;
+  font-size: 15px;
+  line-height: 1.5;
   letter-spacing: 0;
 }
 
 @utility text-prose {
-  font-size: 16px;
-  line-height: 1.55;
+  font-family: var(--font-sans);
   font-weight: 400;
+  font-size: 17px;
+  line-height: 1.55;
   letter-spacing: 0;
-  max-width: 72ch;
+  max-width: 65ch;
 }
 
 @utility text-body-sm {
-  font-size: 13px;
-  line-height: 1.4;
+  font-family: var(--font-sans);
   font-weight: 400;
+  font-size: 13px;
+  line-height: 1.45;
   letter-spacing: 0;
 }
 
 @utility text-caption {
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 1.3;
   font-weight: 500;
@@ -135,12 +157,11 @@
 }
 
 @utility text-stat {
-  font-family: var(--font-serif);
-  font-style: normal;
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 56px;
   line-height: 1;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.025em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -159,12 +180,16 @@
   line-height: 1;
 }
 
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
 html,
 body {
   background-color: var(--color-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
-  font-feature-settings: 'ss01', 'ss02';
+  font-feature-settings: 'ss01', 'cv11';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -175,25 +200,17 @@ body {
   color: var(--color-accent-text);
 }
 
+/* ─── Skeleton & animations ─────────────────────────────────────── */
+
 @keyframes anna-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.55; }
 }
 
 @utility skeleton {
   background-color: var(--color-subtle);
   border-radius: 6px;
   animation: anna-pulse 1.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-
-@keyframes anna-slide-in-right {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0%);   opacity: 1; }
-}
-
-@keyframes anna-slide-out-right {
-  from { transform: translateX(0%);   opacity: 1; }
-  to   { transform: translateX(100%); opacity: 0; }
 }
 
 @keyframes anna-fade-scale-in {
@@ -207,14 +224,17 @@ body {
 
 @keyframes anna-recording-pulse {
   0%, 100% { opacity: 1; }
-  50%      { opacity: 0.85; }
+  50%      { opacity: 0.55; }
 }
 
 .anna-recording-pulse {
   animation: anna-recording-pulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-/* Wordmark underline — kreslí se zleva doprava na mount */
+/* ─── Anna wordmark — sentimentální brand DNA detail ─────────────
+   Jediné místo kde žije wine. Serif italic + tenké podtržení.
+   Hover: subtle breathing animation. */
+
 @keyframes anna-underline-draw {
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
@@ -224,7 +244,7 @@ body {
   display: block;
   height: 1.5px;
   width: 60%;
-  background: var(--color-accent);
+  background: var(--color-wordmark);
   transform-origin: left center;
 }
 
@@ -232,210 +252,6 @@ body {
   animation: anna-underline-draw 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   Pass 4 — atmospheric depth (texture, layered meshes, decorations)
-   ──────────────────────────────────────────────────────────────── */
-
-/* Paper texture — globální subtle noise overlay
-   Primary: SVG turbulence inline data URI (~2 KB, scales clean)
-   Fallback: pokud se na nějakém devicu jeví muddy, lze zaměnit
-   .anna-paper-texture za .anna-paper-texture--gradient (viz dole),
-   nebo node z layoutu odstranit úplně (není must-have). */
-.anna-paper-texture {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.10;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.28 0 0 0 0 0.22 0 0 0 0 0.16 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-}
-
-/* Fallback varianta — pokud SVG noise vychází muddy na low-DPR */
-.anna-paper-texture--gradient {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.04;
-  background:
-    repeating-radial-gradient(
-      circle at 20% 30%,
-      rgba(140, 115, 85, 0.18) 0px,
-      transparent 1px,
-      transparent 3px
-    ),
-    repeating-radial-gradient(
-      circle at 70% 60%,
-      rgba(140, 115, 85, 0.14) 0px,
-      transparent 1px,
-      transparent 4px
-    );
-}
-
-/* Page-scale meshes — non-synced breathing
-   Each varianta má vlastní drift cyklus (delay rozdílný), aby tři
-   meshes nikdy nedýchaly v synchronu — výsledek je organický. */
-@keyframes anna-mesh-drift-12 {
-  0%, 100% { transform: translate(0, 0) scale(1);       opacity: 0.90; }
-  50%      { transform: translate(2.5%, -1.5%) scale(1.05); opacity: 1.0; }
-}
-
-@keyframes anna-mesh-drift-15 {
-  0%, 100% { transform: translate(0, 0) scale(1);        opacity: 0.85; }
-  50%      { transform: translate(-2.5%, 1.5%) scale(1.04); opacity: 1.0; }
-}
-
-@keyframes anna-mesh-drift-8 {
-  0%, 100% { transform: translate(0, 0) scale(1);        opacity: 0.88; }
-  50%      { transform: translate(1.5%, -1.5%) scale(1.06); opacity: 1.0; }
-}
-
-@keyframes anna-mesh-drift-18 {
-  0%, 100% { transform: translate(0, 0) scale(1);        opacity: 0.82; }
-  50%      { transform: translate(-1.5%, 2%) scale(1.05); opacity: 0.97; }
-}
-
-.anna-mesh--page-tr {
-  position: fixed;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(100px);
-  z-index: 0;
-  top: -280px;
-  right: -280px;
-  width: 1100px;
-  height: 1100px;
-  background: radial-gradient(
-    ellipse at 35% 40%,
-    rgba(107, 31, 46, 0.34) 0%,
-    rgba(107, 31, 46, 0.22) 30%,
-    rgba(92, 122, 107, 0.24) 56%,
-    rgba(140, 115, 85, 0.12) 76%,
-    transparent 88%
-  );
-  animation: anna-mesh-drift-12 12s ease-in-out infinite;
-  animation-delay: 0s;
-}
-
-.anna-mesh--page-bl {
-  position: fixed;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(120px);
-  z-index: 0;
-  bottom: -320px;
-  left: -320px;
-  width: 1200px;
-  height: 1200px;
-  background: radial-gradient(
-    ellipse at 55% 55%,
-    rgba(155, 122, 26, 0.30) 0%,
-    rgba(140, 115, 85, 0.24) 35%,
-    rgba(107, 87, 66, 0.16) 62%,
-    transparent 82%
-  );
-  animation: anna-mesh-drift-15 15s ease-in-out infinite;
-  animation-delay: 4s;
-}
-
-.anna-mesh--page-mid {
-  position: fixed;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(60px);
-  z-index: 0;
-  top: 50%;
-  left: 32%;
-  width: 900px;
-  height: 900px;
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(140, 115, 85, 0.42) 0%,
-    rgba(107, 87, 66, 0.28) 35%,
-    rgba(155, 122, 26, 0.16) 60%,
-    transparent 78%
-  );
-  animation: anna-mesh-drift-8 8s ease-in-out infinite;
-  animation-delay: 2s;
-}
-
-.anna-mesh--page-tl {
-  position: fixed;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(110px);
-  z-index: 0;
-  top: -220px;
-  left: -220px;
-  width: 880px;
-  height: 880px;
-  background: radial-gradient(
-    ellipse at 60% 60%,
-    rgba(92, 122, 107, 0.28) 0%,
-    rgba(140, 115, 85, 0.22) 35%,
-    rgba(107, 87, 66, 0.14) 60%,
-    transparent 80%
-  );
-  animation: anna-mesh-drift-18 18s ease-in-out infinite;
-  animation-delay: 6s;
-}
-
-/* Decorative section rule — warmbrown horizontal divider with wine drop-cap tab */
-.anna-section-rule {
-  display: block;
-  position: relative;
-  height: 1px;
-  width: 96px;
-  background: var(--color-warmbrown);
-  opacity: 0.55;
-}
-.anna-section-rule::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: -3px;
-  width: 6px;
-  height: 7px;
-  background: var(--color-accent);
-  opacity: 0.85;
-}
-
-/* Decorative reduced-motion: no animation but still visible */
-@media (prefers-reduced-motion: reduce) {
-  .anna-section-rule::after {
-    /* keep visible — pure decoration, no motion */
-  }
-}
-
-/* Decorative corner accent — wraps SVG glyphs at editorial corners (warmbrown 0.25) */
-.anna-corner-accent {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.32;
-  color: var(--color-warmbrown);
-  z-index: 1;
-}
-
-/* Hero scenic line — wine, draws on mount */
-@keyframes anna-line-draw {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
-.anna-hero-line {
-  display: block;
-  height: 2px;
-  width: 120px;
-  background: var(--color-accent);
-  transform-origin: left center;
-}
-
-.anna-hero-line--draw {
-  animation: anna-line-draw 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Wordmark hover breathing — CSS-only, triggered by parent .anna-wordmark-link:hover */
 @keyframes anna-underline-breathe {
   0%, 100% { transform: scaleX(1); }
   50%      { transform: scaleX(1.05); }
@@ -445,37 +261,27 @@ body {
   animation: anna-underline-breathe 1.5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 
-/* Reduced motion — kill all animations except essentials */
+/* ─── Reduced-motion ─────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
-  .anna-mesh--page-tl,
-  .anna-mesh--page-tr,
-  .anna-mesh--page-bl,
-  .anna-mesh--page-mid {
-    animation: none;
-  }
-  .anna-wordmark-link:hover .anna-underline {
-    animation: none;
-  }
-  .anna-fade-scale-in {
-    animation: none;
-  }
-  .anna-underline--animate {
-    animation: none;
-  }
+  .anna-wordmark-link:hover .anna-underline,
+  .anna-fade-scale-in,
+  .anna-underline--animate,
   .anna-recording-pulse {
     animation: none;
   }
 }
 
-/* Command palette (cmdk) */
+/* ─── Command palette (cmdk) ─────────────────────────────────────── */
+
 .cmdk-palette [cmdk-input] {
   width: 100%;
   height: 56px;
-  padding: 0 24px;
+  padding: 0 20px;
   background: transparent;
   border: none;
   outline: none;
-  font-size: 18px;
+  font-size: 17px;
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--color-border-subtle);
 }
@@ -492,20 +298,20 @@ body {
 }
 
 .cmdk-palette [cmdk-group-heading] {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
-  padding: 12px 16px 6px;
+  padding: 12px 14px 6px;
 }
 
 .cmdk-palette [cmdk-item] {
   display: flex;
   align-items: center;
   height: 44px;
-  padding: 0 16px;
-  border-radius: 8px;
+  padding: 0 14px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 15px;
   color: var(--color-text-primary);

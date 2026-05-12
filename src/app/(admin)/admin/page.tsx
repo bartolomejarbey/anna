@@ -1,7 +1,9 @@
 import { Pulse } from '@phosphor-icons/react/dist/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
 
 interface QueryBuilder {
   select(columns: string, opts?: { count?: 'exact'; head?: boolean }): QueryBuilder;
@@ -144,33 +146,30 @@ export default async function AdminPage() {
   ]);
 
   return (
-    <div>
-      <h1 className="text-h1 text-primary mb-12">Admin</h1>
+    <PageShell>
+      <PageHeader
+        title="Admin"
+        description="Provoz Anny, audit a data pro fine-tuning."
+      />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card>
-          <CardHeader>
-            <p className="text-caption text-tertiary">Schůzek dnes</p>
-          </CardHeader>
-          <CardContent>
-            {meetingResult.error ? (
-              <p className="text-body-sm text-secondary">
-                Data se zobrazí po napojení na databázi.
-              </p>
-            ) : (
-              <>
-                <p className="text-stat text-primary">{meetingResult.count ?? 0}</p>
-                <p className="mt-2 text-body-sm text-tertiary">od {meetingResult.todayIso}</p>
-              </>
-            )}
-          </CardContent>
+          <p className="text-caption text-tertiary">Schůzek dnes</p>
+          {meetingResult.error ? (
+            <p className="mt-3 text-body-sm text-secondary">
+              Data se zobrazí po napojení na databázi.
+            </p>
+          ) : (
+            <>
+              <p className="mt-3 text-stat text-primary">{meetingResult.count ?? 0}</p>
+              <p className="mt-2 text-body-sm text-tertiary">od {meetingResult.todayIso}</p>
+            </>
+          )}
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Poslední aktivita</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <Card className="lg:col-span-2">
+          <p className="text-caption text-tertiary">Poslední aktivita</p>
+          <div className="mt-3">
             {activityResult.error ? (
               <p className="text-body-sm text-secondary">
                 Data se zobrazí po napojení na databázi.
@@ -179,7 +178,7 @@ export default async function AdminPage() {
               <EmptyState
                 icon={Pulse}
                 heading="Žádná aktivita."
-                className="py-4"
+                className="py-8"
               />
             ) : (
               <ul className="divide-y divide-border-subtle">
@@ -200,9 +199,9 @@ export default async function AdminPage() {
                 ))}
               </ul>
             )}
-          </CardContent>
+          </div>
         </Card>
       </div>
-    </div>
+    </PageShell>
   );
 }

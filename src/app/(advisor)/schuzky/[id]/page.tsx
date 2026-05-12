@@ -26,6 +26,8 @@ import {
 } from '@/components/pipeline/cleanup-corrections-diff';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PageShell } from '@/components/ui/page-shell';
 
 // ---------------------------------------------------------------------------
 // Per-step status derivation from MeetingFull state.
@@ -59,7 +61,6 @@ function deriveStepStatus(meeting: MeetingFull) {
     reconcile: step(reconcileDone, 'reconciling', transcribeDone),
     cleanup: step(cleanupDone, 'cleaning', reconcileDone),
     extract: step(extractDone, 'extracting', cleanupDone),
-    // calculate sdílí 'generating' status — done je own signál (calculations row).
     calculate: calculateDone
       ? ('done' as StepStatus)
       : status === 'generating'
@@ -89,24 +90,24 @@ export default async function MeetingDetailPage({
 
   if (dbUnavailable) {
     return (
-      <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <PageShell>
         <EmptyState
           icon={Microphone}
           heading="Data se zobrazí po napojení na databázi."
         />
-      </div>
+      </PageShell>
     );
   }
 
   if (!meeting) {
     return (
-      <div className="mx-auto w-full max-w-[960px] px-8 py-16">
+      <PageShell>
         <EmptyState
           icon={Microphone}
           heading="Schůzka nenalezena."
           action={{ label: 'Zpět na schůzky', href: '/schuzky' }}
         />
-      </div>
+      </PageShell>
     );
   }
 
@@ -114,7 +115,6 @@ export default async function MeetingDetailPage({
   const customerName = meeting.customer?.full_name ?? 'Zákazník';
   const status = meeting.status as MeetingStatus;
 
-  // Audio signed URL for player
   let audioSignedUrl: string | null = null;
   if (meeting.audio_url) {
     try {
@@ -136,7 +136,6 @@ export default async function MeetingDetailPage({
     minute: '2-digit',
   });
 
-  // Bound rerun server actions, scoped to this meeting.
   async function rerunTranscribe() {
     'use server';
     await runStepTranscribe(meetingId, { force: true });
@@ -181,19 +180,18 @@ export default async function MeetingDetailPage({
     (meeting.transcript?.cleanup_corrections as CleanupCorrection[] | null) ?? null;
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-8 py-16">
-      {/* Header */}
-      <div className="mb-12 flex items-start justify-between gap-4">
+    <PageShell>
+      <header className="flex items-start justify-between gap-4 pb-10 pt-12">
         <div className="flex flex-col gap-2">
+          <span className="text-caption text-tertiary">Schůzka</span>
           <h1 className="text-h1 text-primary">{customerName}</h1>
           <p className="text-body-sm text-tertiary">{formattedDate}</p>
         </div>
         <div className="mt-1">
           <MeetingStatusPill status={status} />
         </div>
-      </div>
+      </header>
 
-      {/* Audio */}
       {audioSignedUrl && (
         <Card variant="compact" className="mb-12">
           <p className="mb-3 text-caption text-tertiary">Nahrávka</p>
@@ -201,18 +199,14 @@ export default async function MeetingDetailPage({
         </Card>
       )}
 
-      {/* Pipeline 6 steps */}
       <section className="mb-12">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-5 flex items-center justify-between">
           <h2 className="text-caption text-tertiary">Pipeline</h2>
           {status !== 'ready' && (
             <form action={rerunFullPipeline}>
-              <button
-                type="submit"
-                className="inline-flex h-9 items-center justify-center rounded-[8px] bg-accent px-4 text-body-sm font-medium text-accent-text transition-opacity hover:opacity-90 active:scale-[0.98]"
-              >
+              <Button size="sm" type="submit">
                 {status === 'failed' ? 'Spustit znovu' : 'Spustit zpracování'}
-              </button>
+              </Button>
             </form>
           )}
         </div>
@@ -288,15 +282,13 @@ export default async function MeetingDetailPage({
         </Card>
       </section>
 
-      {/* Cleanup diff */}
       {cleanupCorrections && cleanupCorrections.length > 0 && (
         <section className="mb-12">
           <CleanupCorrectionsDiff corrections={cleanupCorrections} />
         </section>
       )}
 
-      {/* Outputs */}
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8 pb-20">
         {meeting.transcript && (
           <TranscriptViewer
             text={meeting.transcript.text ?? ''}
@@ -314,15 +306,13 @@ export default async function MeetingDetailPage({
         )}
 
         {!meeting.transcript && !meeting.extraction && !meeting.offer && status !== 'failed' && (
-          <div className="flex flex-col items-start py-16">
-            <Microphone size={32} weight="regular" className="mb-6 text-tertiary" />
-            <h3 className="text-h2 text-primary">Anna se k téhle schůzce ještě nedostala.</h3>
-            <p className="mt-2 max-w-[44ch] text-body text-secondary">
-              Pipeline ještě nezačal — spusť ho tlačítkem nahoře.
-            </p>
-          </div>
+          <EmptyState
+            icon={Microphone}
+            heading="Anna se k téhle schůzce ještě nedostala."
+            description="Pipeline ještě nezačal — spusť ho tlačítkem nahoře."
+          />
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

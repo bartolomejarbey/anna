@@ -15,7 +15,7 @@ export function Card({ variant = 'default', className, children, ...props }: Car
   return (
     <div
       className={cn(
-        'rounded-[12px] border border-border-subtle bg-surface',
+        'rounded-[18px] border border-border-subtle bg-surface',
         variantClasses[variant],
         className,
       )}

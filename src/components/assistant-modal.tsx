@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Xmark } from 'iconoir-react';
+import { X } from '@phosphor-icons/react';
 import { AiAsistentChat } from '@/components/ai-asistent-chat';
 import { useAssistant } from '@/components/launchpad/assistant-context';
 
@@ -24,18 +24,18 @@ export function AssistantModal() {
       <div
         aria-hidden
         onClick={closeAssistant}
-        className="absolute inset-0 bg-black/15"
+        className="absolute inset-0 bg-black/20"
       />
-      <div className="anna-fade-scale-in relative flex h-[640px] w-[640px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] flex-col overflow-hidden rounded-[16px] border border-border-default bg-surface">
-        <div className="flex h-14 items-center justify-between border-b border-border-subtle px-6">
-          <span className="text-caption text-tertiary">Anna</span>
+      <div className="anna-fade-scale-in relative flex h-[640px] w-[640px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] flex-col overflow-hidden rounded-[14px] border border-border-subtle bg-surface shadow-[0_24px_64px_rgba(0,0,0,0.16)]">
+        <div className="flex h-14 items-center justify-between border-b border-border-subtle px-5">
+          <span className="text-body-sm font-medium text-primary">Asistent</span>
           <button
             type="button"
             onClick={closeAssistant}
             aria-label="Zavřít"
-            className="flex h-8 w-8 items-center justify-center rounded-[6px] text-tertiary transition-colors hover:bg-subtle hover:text-primary"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-tertiary transition-colors hover:bg-subtle hover:text-primary"
           >
-            <Xmark width={18} height={18} strokeWidth={1.5} />
+            <X size={16} weight="regular" />
           </button>
         </div>
         <div className="flex-1 overflow-hidden">

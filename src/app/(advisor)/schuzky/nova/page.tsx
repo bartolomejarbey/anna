@@ -1,6 +1,8 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { currentAdvisorId } from '@/lib/auth';
 import { NewMeetingShell } from './new-meeting-shell';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
 
 export const metadata = {
   title: 'Nová schůzka — Anna',
@@ -29,9 +31,12 @@ export default async function NovaSchuzkaPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
-      <h1 className="text-h1 text-primary mb-16">Nová schůzka</h1>
+    <PageShell width="narrow">
+      <PageHeader
+        title="Nová schůzka"
+        description="Vyber zákazníka, nahraj zvuk a Anna zbytek zvládne sama."
+      />
       <NewMeetingShell customers={customers} />
-    </div>
+    </PageShell>
   );
 }

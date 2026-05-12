@@ -97,241 +97,218 @@ VŠECHNY tabulky v DB MUSÍ mít RLS policies:
 
 ---
 
-## 5. DESIGN SYSTEM
+## 5. DESIGN SYSTEM — Apple brand (Lukášův Finplan 2)
 
-Anna není dashboard. Není CRM. Není SaaS template. Anna je AI nástroj pro práci finančního poradce s vlastním vizuálním jazykem.
+Anna používá **Apple-style ink/canvas/blue jazyk** napříč celou app. Žádný cream, žádné wine v UI. Jediná výjimka: **Anna wordmark** (serif italic + tenké wine podtržení) — to je jediný brand-DNA detail. Vše ostatní = čistá Apple typografie, pill buttons, radius-18 cards, border-only hierarchie.
 
-Inspirace: Granola.ai (invisible AI, function-first), Linear (custom design language), Stripe Dashboard (editorial typography), Apple Notes (žádné ikonky u textu, hierarchie přes typografii).
+Inspirace: Apple.com (editorial bigness, generous whitespace, tabular numerics), iOS Settings (list rows s divide-y), Linear (status pills s dotem). 
 
-Anti-inspirace: shadcn dashboard templates, Vercel v0 outputs, generic SaaS apps.
+Anti-inspirace: shadcn dashboard templates, Vercel v0 outputs, generic SaaS apps, cream/wine palety.
 
 ### 5.1 BANNED PATTERNS (porušení = re-do)
 
 ABSOLUTNĚ ZAKÁZÁNO:
 
 **Typografie:**
-- ❌ font Inter
 - ❌ font Geist (overused v AI workflow 2025-2026)
 - ❌ system-sans (vágnost)
-- ❌ font-weight 400 pro nadpisy (musí být 500+)
-- ❌ tracking default (vždy explicitní `tracking-tight` nebo `tracking-tighter` na display textu)
+- ❌ tracking default (vždy explicitní `-0.01em` až `-0.03em` na nadpisech)
+- ❌ uppercase body text (caption only)
 
 **Barvy:**
-- ❌ purple-to-blue gradients (`#6366f1` → `#8b5cf6`)
+- ❌ wine v UI (kromě `.anna-underline` pod wordmark)
+- ❌ cream pozadí (`#FAF6F0` a podobné) — nahrazeno Apple gray `#FBFBFD`
+- ❌ purple-to-blue gradients
 - ❌ shadcn defaults (slate-*, zinc-*, neutral-*)
-- ❌ blue-500 jako primary action
-- ❌ neon barvy
-- ❌ gradient backgrounds anywhere
-- ❌ dva accent colors najednou
+- ❌ neon barvy, gradient backgrounds
+- ❌ dva accent colors najednou — accent = `#0071e3` (Apple blue) a basta
 
 **Layout:**
-- ❌ centered hero sections
+- ❌ sidebar | main | rail dashboard
+- ❌ cards s `shadow-sm/md/lg` (jen border)
+- ❌ centered hero sections — vše left-aligned editorial
 - ❌ bento grids
-- ❌ 3-sloupcový layout (sidebar | main | rail) jako default
-- ❌ cards s shadow-sm/md/lg
-- ❌ symmetric padding všude (8/8/8/8)
+- ❌ symmetric padding všude
 - ❌ p-8 jako default
 
 **Ikony:**
-- ❌ Lucide-react v menu položkách
+- ❌ Lucide-react kdekoliv (Phosphor only)
 - ❌ Heroicons
-- ❌ Ikony u každého nadpisu
-- ❌ Ikony u každého sidebar item
-- ❌ stroke-width 1.5 (default Lucide look)
+- ❌ Ikony u každého nadpisu / sidebar item
 
 **Komponenty:**
-- ❌ shadcn Card s default props
-- ❌ shadcn Button s default variants
+- ❌ rounded-xl jako default na buttons (pill = `rounded-full` 980px)
+- ❌ rounded-2xl na cards (radius-18 = `rounded-[18px]`)
 - ❌ kulaté avatary s iniciálami v top-right
-- ❌ rounded-xl/2xl všude bez rozmyslu
 
 **Interakce:**
-- ❌ spinners pro loading states (skeletons only)
+- ❌ spinners (skeletons only)
 - ❌ "No items yet" empty states
 - ❌ toast notifications pro errors (inline only)
-- ❌ "Get started by..." copy
 
 **Copy:**
 - ❌ "AI-powered" cokoliv
 - ❌ helpful subtitle pod každým nadpisem
 - ❌ suggested prompts u AI inputu
-- ❌ ChatGPT-style prose ("Anna automaticky...", "Vyberte X a...")
-- ❌ "[Bot name] — [bot description]" empty state pattern
 
-### 5.2 TYPOGRAFIE (explicitní)
+### 5.2 TYPOGRAFIE
 
 **Font family:**
+- `Inter` (variable, loaded přes `next/font/google` v `src/app/layout.tsx`) jako default
+- `Instrument Serif` italic JEN pro Anna wordmark
+- `JetBrains Mono` jen pro code/metrics/transcripts
+
+**CSS:**
 ```css
-/* General Sans od Fontshare — anti-slop, free, character */
-@import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap');
-
-font-family: 'General Sans', -apple-system, sans-serif;
+--font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+--font-serif: 'Instrument Serif', 'Georgia', serif;
+--font-mono: 'JetBrains Mono', ui-monospace, monospace;
 ```
 
-**Type scale:**
+**Type scale (Apple editorial):**
 ```
-Display (page hero):    52px / line-height 1.05 / font-weight 500 / tracking -0.02em
-H1 (section):           36px / line-height 1.1  / font-weight 500 / tracking -0.015em
-H2 (subsection):        24px / line-height 1.2  / font-weight 500 / tracking -0.01em
-H3 (card title):        18px / line-height 1.3  / font-weight 500 / tracking 0
-Body large:             17px / line-height 1.5  / font-weight 400 / tracking 0
-Body:                   15px / line-height 1.5  / font-weight 400 / tracking 0
-Body small:             13px / line-height 1.4  / font-weight 400 / tracking 0
-Caption:                12px / line-height 1.3  / font-weight 500 / tracking 0.02em / uppercase
-Mono:                   14px / 'JetBrains Mono' (jen pro code, transcripts, metrics)
+text-hero          72px / 1   / 600 / tracking -0.03em   — page hero, Lukáš style
+text-hero-sm       56px / 1   / 600 / tracking -0.025em  — subhero
+text-h1            40px / 1.1 / 600 / tracking -0.02em   — page title
+text-h2            28px / 1.2 / 600 / tracking -0.015em  — section
+text-h3            20px / 1.3 / 600 / tracking -0.01em   — card title
+text-body-lg       17px / 1.5 / 400                       — lead, intro
+text-prose         17px / 1.55 / 400 / max-w 65ch         — reading copy
+text-body          15px / 1.5 / 400                       — default
+text-body-sm       13px / 1.45 / 400                      — meta, labels
+text-caption       12px / 1.3 / 500 / tracking 0.12em UPPER — eyebrow
+text-stat          56px / 1   / 600 / tracking -0.025em / tabular — stat numbers
+text-wordmark      serif italic                           — Anna only
+text-mono          14px JetBrains Mono                    — code
 ```
 
 **Pravidla:**
-- Display text MÁ tracking-tighter (-0.02em). Nikdy default.
-- Caption text MÁ tracking-wide (0.02em) + uppercase + font-weight 500. Použít sparingly — sekce labels, status pills.
-- Body NIKDY uppercase.
-- max-width pro reading copy: 65ch.
-- font-weight 600+ jen pro vizuální důraz, ne pro nadpisy. Hero = 500, nikdy 700.
+- Nadpisy `font-weight 600`. Hero může být 600 i 500, podle vizuálního důrazu.
+- `tabular-nums` na všem numerickém (`.tabular` utility).
+- Body NIKDY uppercase. Caption pouze sparingly — eyebrow nad h1, sekce labels, pill labels.
+- `text-prose` má built-in `max-w 65ch` pro reading copy.
 
-### 5.3 BARVY (explicitní hex, žádné popisy)
+### 5.3 BARVY (Apple system, explicitní hex)
 
 ```css
-/* Background — vrstvená cream */
---bg-canvas:        #FAF6F0;  /* hlavní pozadí, warm cream */
---bg-surface:       #FFFFFF;  /* cards, modals — pure white pro kontrast */
---bg-subtle:        #F2EBE0;  /* hover states, secondary surfaces */
---bg-inset:         #E8DFCF;  /* nested surfaces, code blocks */
+/* Backgrounds */
+--color-canvas:        #FBFBFD;  /* near-white, Apple's gray-7 */
+--color-surface:       #FFFFFF;  /* cards, modals */
+--color-subtle:        #F5F5F7;  /* hover, secondary surfaces */
+--color-inset:         #EFEFF1;  /* nested, code blocks */
 
 /* Borders */
---border-subtle:    #E5DCC9;  /* default border */
---border-default:   #C9BCA1;  /* normal border */
---border-strong:    #1A1A1A;  /* emphasized border (focus, active) */
+--color-border-subtle: #E5E5EA;  /* default border — Apple gray-5 */
+--color-border-default:#D2D2D7;  /* Apple gray-4 */
+--color-border-strong: #1D1D1F;  /* ink — emphasized (focus rare) */
 
-/* Text */
---text-primary:     #1A1A1A;
---text-secondary:   #5A5045;
---text-tertiary:    #8C8276;
---text-disabled:    #B5AB99;
+/* Text — ink hierarchy */
+--color-text-primary:  #1D1D1F;  /* ink */
+--color-text-secondary:#515154;  /* near-ink */
+--color-text-tertiary: #86868B;  /* muted — Apple gray-1 */
+--color-text-disabled: #B5B5B8;
 
-/* Accent — wine, jediný akcent v UI */
---accent:           #6B1F2E;
---accent-hover:     #561620;
---accent-muted:     rgba(107,31,46,0.10);  /* featured tool cards, badge backgrounds */
---accent-text:      #FAF6F0;
+/* Accent — Apple system blue */
+--color-accent:        #0071E3;
+--color-accent-hover:  #0051A2;
+--color-accent-muted:  rgba(0, 113, 227, 0.08);
+--color-accent-text:   #FFFFFF;
 
-/* Functional */
---success:          #2F5237;
---warning:          #8C6914;
---error:            #6B1F2E;  /* sdílí wine s accent — finanční serioznost, ne agresivní červená */
+/* Wordmark — wine, JEN pro Anna wordmark underline */
+--color-wordmark:      #6B1F2E;
 
-/* Functional backgrounds (10% alpha) */
---success-bg:       rgba(47,82,55,0.10);
---warning-bg:       rgba(140,105,20,0.10);
---error-bg:         rgba(107,31,46,0.10);
+/* Functional — Apple system colors */
+--color-success:       #34C759;
+--color-warning:       #FF9500;
+--color-error:         #FF3B30;
 ```
 
 **Pravidla:**
-- Wine `--accent` je JEDINÝ akcent v UI. Žádný druhý.
-- `--accent-muted` jen pro: featured tool-card pozadí, "Q* 2026" badge backgrounds. Ne hover (hover = border darkening).
-- Background hierarchie přes 4 vrstvy cream (canvas → surface → subtle → inset). To je hierarchie, ne shadow.
-- ŽÁDNÉ shadows. Hierarchie přes background contrast a border, ne stíny.
+- `--color-accent` (Apple blue) = JEDINÝ akcent v UI. Žádný druhý.
+- `--color-wordmark` (wine) JEN v `.anna-underline` pod wordmark. Nikdy text, nikdy border, nikdy bg.
+- Hierarchie přes background contrast + border, **ŽÁDNÉ shadows** kromě modal/dropdown overlay (`shadow-[0_24px_64px_rgba(0,0,0,0.16)]` na centered modals).
+- Cards: `border border-border-subtle` na `bg-surface`, hover `border-border-default` + `-translate-y-0.5`.
 
-### 5.4 LAYOUT — LAUNCHPAD ARCHITEKTURA
+### 5.4 LAYOUT — Apple editorial
 
-**Anti-pattern:** sidebar | main | rail dashboard. Nikdy.
-
-**Pattern:** topbar (slim) + main (full-width, scrollable). Žádný sidebar. Navigace přes home launchpad + ⌘K command palette.
+**Pattern:** topbar (h-14, slim) + main (scrollable, PageShell width tiers). Žádný sidebar. Navigace přes home launchpad + ⌘K command palette.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ Anna  /  Schůzky                          ⌘K  Karel ▾    │ ← 64px topbar, border-b
+│ Anna  /  Schůzky                  Hledat  ⌘K   Karel ▾   │ ← h-14 topbar
 ├──────────────────────────────────────────────────────────┤
-│                                                            │
-│         <main, max-width 1280px, scrollable>              │
-│                                                            │
+│         <PageShell, narrow/default/wide, scrollable>     │
 └──────────────────────────────────────────────────────────┘
 
-⌘K          → Command palette modal (640px, centered)
-Asistent    → Modal (640×640, centered) — NE rail
+⌘K          → Command palette (640px, top-15%, rounded-[14px])
+Asistent    → Modal (640×640, rounded-[14px], shadow-[0_24px_64px_…])
 ```
+
+**Width tiers (PageShell):**
+- `narrow` — 720px, forms, settings, customer flow
+- `default` — 1024px, list views (schůzky, zákazníci, finanční plán)
+- `wide` — 1280px, dashboard hero + grids
 
 **Grid systém:**
 - Base unit: 4px
-- Spacing scale: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128
-- ŽÁDNÉ vlastní pixel hodnoty mimo scale.
-- Vertical rhythm mezi sekcemi na home: 96px.
+- Spacing scale: 4, 8, 12, 16, 20, 24, 32, 48, 64, 96
+- Vertical rhythm mezi sekcemi: `my-20 md:my-24` (SectionDivider) nebo `gap-20` na PageHeader → grid.
 
-**Topbar (64px height):**
-- Bg-canvas (splývá s mainem, jen border-b odděluje)
-- Vlevo: "Anna" text logo (h3 size, font-medium, link na `/dashboard`) + breadcrumb (jen mimo home — `/` separator + page title v text-secondary)
-- Vpravo: ⌘K trigger ("Hledat" + kbd) → otvírá **palette** (NE asistenta) + advisor dropdown (text + caret, žádný kruh s iniciálami)
+**Topbar (h-14):**
+- `bg-canvas/80 backdrop-blur-md border-b border-border-subtle`
+- Vlevo: `AnnaWordmark` (serif italic + wine underline) + `/` separator + breadcrumb v `text-secondary`
+- Vpravo: pill search trigger (`rounded-full bg-subtle px-4 h-9`) + advisor dropdown s caret (žádný kruh s iniciálami)
 
-**Home launchpad (`/dashboard`):**
-- 4 sekce, vertical rhythm 96px:
-  1. **Hero greeting** — display 56px tracking-tight, time-based ("Dobré ráno, Karle")
-  2. **Tvoje aktivita** — 3 stat cards (poslední schůzka, týden, posl. nabídka)
-  3. **Tvoje nástroje** — launchpad grid 3 sloupce (Naslouchač featured, pak ostatní)
-  4. **Brzy dostupné** — launchpad grid 3 sloupce, disabled + Q* badge
+**Cards (radius-18):**
+- `rounded-[18px] border border-border-subtle bg-surface p-6` (default)
+- Hover (jen pokud clickable): `border-border-default -translate-y-0.5` přes 180ms ease-out-quart
+- Tool card: `p-7`, icon v `h-11 w-11 rounded-[12px]` tone box
+- ŽÁDNÉ shadows (kromě výše uvedených modal/dropdown)
+
+**Buttons (pill, 980px radius):**
+- Primary: `bg-accent text-accent-text rounded-full h-10 px-5 font-medium hover:bg-accent-hover active:scale-[0.98]`
+- Secondary: `border border-border-default bg-surface rounded-full h-10 px-5`
+- Ghost: `rounded-full text-primary hover:bg-subtle h-10 px-4`
+- NIKDY rounded-xl ani rounded-md na buttons
+
+**Inputs (radius-12):**
+- `h-11 rounded-[12px] border border-border-default bg-surface px-4`
+- Focus: `border-accent ring-4 ring-accent/15 outline-none`
+- Label nad inputem: `text-body-sm font-medium text-primary`
 
 **Tool card (launchpad):**
-- Full-grid sloupec (~360px), výška ~200px
-- Padding 28px, border-radius 16px, border 1px subtle
-- Hover: border accent + translate-y(-1px), 180ms ease-out-quart
-- **Custom SVG ikona 48px** wine accent, vlevo nahoře (NE Lucide, NE Heroicons, NE Phosphor v tool-card pozici)
-- Title 20px (h3) font-medium tracking-tight
-- Description 14px (body-sm) text-secondary, 2 lines max
-- **Featured** varianta: bg-accent-muted (wine wash, ne hover state)
-- **Disabled** varianta: opacity 0.5, ikona text-tertiary, badge "Q* 2026" top-right (bg-accent-muted, text-accent, 11px tracking-wide)
+- `rounded-[18px] border border-border-subtle bg-surface p-7`
+- Icon `h-11 w-11 rounded-[12px]` (subtle tone bg, accent text), top-left
+- Title `text-h3`, description `text-body-sm text-secondary` (2 lines max)
+- Featured: `bg-accent-muted` (no separate hover variant)
+- Disabled: `opacity-50` + `StatusPill tone="accent"` s quarter ("Q* 2026")
 
-**Activity card (stat):**
-- bg-surface, border-subtle, padding 24px, radius 12px
-- Title 12px caption uppercase tracking-wide text-tertiary
-- Value `.text-stat` (32px font-medium tracking-tight) NEBO h3 (20px) pro jméno
-- Subtitle pod value: 13px text-secondary
-- Hover border-default (jen pokud clickable)
+**Stat card (activity):**
+- `rounded-[18px] border border-border-subtle bg-surface p-6`
+- Eyebrow `text-caption text-tertiary`
+- Value `text-stat tabular text-primary`
+- Subtitle `text-body-sm text-secondary`
+
+**List rows (ListRow):**
+- Parent: `<ul className="divide-y divide-border-subtle">`
+- ListRow: hover `bg-subtle -mx-3 px-3 rounded-[12px]`, primary text + optional secondary, trailing slot (StatusPill / CaretRight)
+- Žádné cards okolo — flat list, divide-y rules
 
 **Command palette (⌘K):**
-- Otvírá ⌘K. Toggle (druhý ⌘K zavírá).
-- Max-width 640px, vertically centered, overlay bg-black/15
-- bg-surface, radius 16px, border-default, fade-scale-in 180ms
-- Search input 56px, padding 0 24px, font-size 18px, placeholder "Co hledáš?", border-b subtle
-- Results 480px max-height, scrollable
-- Result item 44px, padding 0 24px, hover bg-subtle
-- Sekce (cmdk groups): Nástroje, Zákazníci, Schůzky, AI Asistent
-- "Zeptej se Anny" item: zavře palette + otevře asistenta s prefilled query
+- `rounded-[14px] border border-border-subtle bg-surface shadow-[0_24px_64px_rgba(0,0,0,0.16)]`
+- Top-15%, max-w 640px, overlay `bg-black/20`
+- Input `h-14 px-5 text-[17px]` + border-b subtle
+- Group heading: `text-[11px] tracking-[0.02em] uppercase text-tertiary` (subtle, ne shout)
+- Items: `h-11 rounded-[10px] px-3.5`, selected `bg-subtle`
 
 **Asistent modal:**
-- Otvírá: home tool card "Asistent" NEBO "Zeptej se Anny" v palette
-- NIKDY ⌘K (⌘K je palette)
-- Centered, 640×640, bg-surface, radius 16px, border-default
-- ESC nebo close ikona zavírá
-- Wraps existující `AiAsistentChat` komponentu
-
-**Cards (obecné):**
-- Border 1px `--border-subtle`, ne shadow
-- Padding 24px (default) / 28px (tool card)
-- Border-radius 12px (default) / 16px (tool card, modal, palette)
-- Background `--bg-surface` (white) na canvas (cream)
-- Hover state: `--border-default`
-
-**Buttons:**
-- Primary: bg `--accent` (wine), text `--accent-text`, height 40px, radius 8px, padding 0 16px, font-weight 500
-- Secondary: border 1px `--border-default`, bg transparent, text `--text-primary`
-- Ghost: text only, bg transparent, hover bg-subtle
-- Žádné rounded-full, ne rounded-xl
-- Active state: scale-[0.98]
-
-**Inputs:**
-- Border 1px `--border-default`, bg `--bg-surface`
-- Height 40px, padding 0 12px
-- Border-radius 8px
-- Focus: border `--accent` (wine, 2px subtle ring)
+- `h-[640px] w-[640px] rounded-[14px] border border-border-subtle bg-surface shadow-[0_24px_64px_rgba(0,0,0,0.16)]`
+- Header h-14: "Asistent" + close button (rounded-full, 32px)
+- Wraps `AiAsistentChat`
 
 ### 5.5 IKONY
 
-**Žádné Lucide v sidebar menu.**
-
-Tam, kde ikony POUŽIJEME:
-- Statusy v meeting list (mikrofon = recording, hodiny = processing, atd.)
-- Action buttons s textem (toolbar v meeting detail)
-- Empty state ilustrace (1 hero ikona, NE ozdobně)
-
-Když potřebujeme ikony, použít **Phosphor Icons** v `regular` weight (ne `bold`, ne `fill`):
+**Phosphor Icons** v `regular` weight (ne `bold`, ne `fill`). NIKDY Lucide.
 
 ```bash
 npm install @phosphor-icons/react
@@ -339,77 +316,101 @@ npm install @phosphor-icons/react
 
 ```jsx
 import { Microphone, Clock, FileText } from '@phosphor-icons/react';
+// nebo SSR variant pro Server Components:
+import { Microphone } from '@phosphor-icons/react/dist/ssr';
+
 <Microphone size={18} weight="regular" />
 ```
 
 **Pravidla:**
-- Velikost 16-20px max
-- Color: `--text-secondary`, ne primary
-- Stroke 1.5 default Phosphor (anti-Lucide)
+- Velikost 16-20px max (Phosphor default `size={20}`)
+- Color přes parent `text-*` utility (nikdy hard-coded)
+- Empty state hero ikona může být 32px (1 ikona, NE dekorativně)
 
-### 5.6 INTERAKCE
+### 5.6 STATUS PILLS
 
-**Loading states:**
+`<StatusPill tone="...">` (`src/components/ui/status-pill.tsx`).
+
+**Tones:**
+- `neutral` (default) — bg subtle, text secondary
+- `success` — Apple green tinted bg
+- `warning` — Apple orange tinted bg
+- `error` — Apple red tinted bg
+- `accent` — Apple blue tinted bg (Q* badges, featured tags)
+- `processing` — neutral + animated dot (running states)
+
+Props: `tone`, `dot` (boolean — colored dot indicator).
+
+Layout: `rounded-full px-2.5 py-1 text-body-sm font-medium`.
+
+### 5.7 INTERAKCE
+
+**Loading:**
 - Skeletons matching real layout (ne spinners)
-- Skeleton bg: `--bg-subtle` s subtle pulse animation (1.5s ease-in-out)
+- `skeleton` utility: `bg-subtle rounded-[6px]` + 1.5s pulse animation
 
-**Empty states:**
-- Composed: 1 řádek nadpisu + 1 řádek instrukce + 1 action button
-- Žádné "No items yet" — místo toho akční formulace ("Žádná schůzka tento týden. Naplánovat novou?")
-- Empty state má max 3 prvky: nadpis, popis, akce
+**Empty states (EmptyState component):**
+- Icon v `h-14 w-14 rounded-full bg-subtle` wrapper, centered text
+- Heading + body + optional action button
+- Akční formulace ("Žádná schůzka. Naplánovat novou?"), nikdy "No items yet"
 
 **Errors:**
-- Inline pod input fieldem v `--error` text, ne toast
-- Form-level errors v `--error-bg` boxu nahoře formuláře
+- Inline pod input fieldem v `text-error`, ne toast
+- Form-level: `ErrorState` component s `bg-error-bg` wrapper
 
 **Animace:**
-- POUZE: opacity (fade), transform (slide, scale)
-- NIKDY: width, height, top, left animace
-- Duration: 150-250ms pro micro-interactions, 300-400ms pro page transitions
-- Easing: `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out-quart, smooth)
-- Active state na buttons: `scale(0.98)`, žádný "lift"
+- POUZE opacity (fade), transform (slide, scale)
+- NIKDY width, height, top, left
+- Duration: 150-250ms micro, 300-400ms page
+- Easing: `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out-quart) — definováno jako `--ease-out-quart`
+- Buttons active: `scale(0.98)`. Cards hover: `-translate-y-0.5`. Žádný "lift".
 
-### 5.7 COPY (anti-AI-slop)
+**Modal/palette enter:**
+- `.anna-fade-scale-in` (180ms ease-out-quart, opacity 0→1 + scale 0.96→1)
 
-**Empty states — patterns BANNED:**
+### 5.8 COPY (anti-AI-slop)
+
+**Empty states — BANNED:**
 - ❌ "[Thing name] — [thing description]"
 - ❌ "Get started by..."
 - ❌ "You don't have any [X] yet"
-- ❌ "Welcome to [product]! Here's what you can do..."
 
-**Empty states — patterns GOOD:**
-- ✅ Akční formulace: "Žádná schůzka tento týden. Naplánovat?"
+**GOOD:**
+- ✅ Akční formulace v 1. osobě / imperative
 - ✅ Žádný subtitle pod hlavním nadpisem akčních stránek
 
-**Buttons:**
-- Sloveso v 1. osobě nebo imperative: "Nahrát", "Uložit", "Začít" (ne "Klikněte zde pro...")
-- Krátké: 1-3 slova max
+**Buttons:** 1-3 slova, sloveso imperative ("Nahrát", "Uložit", "Začít").
 
-**AI asistent:**
-- Empty state = jen input s placeholderem "Napište zprávu"
-- ŽÁDNÉ suggested prompts ("Shrň schůzku...", "Co se obvykle ptám...")
-- ŽÁDNÝ bio header ("Anna — AI asistent finančního poradce")
-- AI se otevírá přes ⌘K, ne pořád v rail
+**AI asistent:** placeholder "Zeptej se." — ŽÁDNÉ suggested prompts, ŽÁDNÝ bio header.
 
-**Formuláře:**
-- Žádné helpful prose mezi polma
-- Labels nad inputy, krátké
-- Placeholder text je příklad (ne instrukce)
+**Formuláře:** labels nad inputy, žádná helpful prose, placeholder = příklad.
 
-### 5.8 SOUND CHECK — slop detection
+### 5.9 BRAND DNA — Anna wordmark
 
-Před commitem komponenty si polož tyto otázky:
+Jediný sentimentální detail v jinak Apple-čisté UI. Bez wordmarku by Anna nebyla Anna.
 
-1. Vypadá to jako **konkrétní jiný produkt** (Granola, Linear, Stripe), nebo jako **average dashboard**?
-2. Je tam Lucide ikonka u textu menu položky? → **slop, fix**
-3. Je tam helpful subtitle pod nadpisem akce? → **slop, vyhodit**
-4. Jsou tam suggested prompts u AI inputu? → **slop, vyhodit**
-5. Je font Inter, Geist nebo system-sans? → **slop, fix na General Sans**
-6. Jsou tam dva accent colors? → **slop, jeden**
-7. Je tam shadow na cards? → **slop, border místo**
-8. Je tam centered hero? → **slop, left-aligned**
-9. Je tam "AI-powered" v copy? → **slop, vyhodit**
-10. Vidíš purple/blue gradient? → **slop, smazat**
+**Komponenta:** `<AnnaWordmark size="sm|md|lg" />` (`src/components/brand/anna-wordmark.tsx`).
+
+**Pravidla:**
+- Serif italic (`Instrument Serif`) na slově "Anna", text `text-primary` (ink, ne wine!)
+- Pod ním tenké wine podtržení (`.anna-underline`, `--color-wordmark` = #6B1F2E)
+- Hover: subtle breathing animation podtržení (`anna-underline-breathe`)
+- **Wine je tady a jen tady.** Žádný button, žádný badge, žádný text v UI nemá wine. Nikdy.
+
+### 5.10 SOUND CHECK — slop detection
+
+Před commitem komponenty:
+
+1. Vypadá to jako **Apple.com / Linear / Stripe**, nebo jako **generic dashboard**?
+2. Je tam Lucide ikonka? → **slop, fix na Phosphor**
+3. Je tam shadow na běžném cardu (ne modal)? → **slop, border místo**
+4. Je tam `rounded-xl` na buttonu? → **slop, `rounded-full` pill**
+5. Je tam wine kdekoliv kromě `.anna-underline`? → **slop, na blue (`text-accent`)**
+6. Je font Geist nebo system-sans? → **slop, Inter**
+7. Je tam centered hero? → **slop, left-aligned**
+8. Je tam "AI-powered" v copy? → **slop, vyhodit**
+9. Vidíš purple/blue gradient? → **slop, smazat**
+10. Suggested prompts u AI inputu? → **slop, vyhodit**
 
 Pokud na 2+ otázek "ano" → komponenta není shippable.
 

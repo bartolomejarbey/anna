@@ -10,7 +10,6 @@ export function PlanThanks({ customerName, advisorName }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-[640px] px-6 pt-32 pb-24 md:px-8">
-      <p className="anna-section-rule mb-5" aria-hidden />
       <CheckCircle size={32} weight="regular" className="mb-6 text-accent" />
       <h1 className="mb-6 text-h1 text-primary">
         {firstName ? `Díky, ${firstName}.` : 'Díky.'}

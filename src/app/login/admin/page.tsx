@@ -1,55 +1,35 @@
 import Link from 'next/link';
 import { AnnaWordmark } from '@/components/brand/anna-wordmark';
+import { Avatar } from '@/components/ui/avatar';
+import { CaretRight } from '@phosphor-icons/react/dist/ssr';
 import { loginAsDemoAdvisor } from '@/lib/actions/auth';
-import { PlatformBackdrop } from '@/components/launchpad/platform-backdrop';
 
 const SUPER_ADMIN_ID = 'ad0000000099';
 
 export default function AdminLoginPage() {
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-canvas px-6 py-16">
-      <PlatformBackdrop />
-
-      <div className="relative z-10 w-full max-w-sm">
+    <div className="flex min-h-screen w-full items-center justify-center bg-canvas px-6 py-16">
+      <div className="w-full max-w-[420px]">
         <header className="mb-12">
-          <AnnaWordmark size="md" animate />
-          <p className="mt-5 text-caption text-tertiary">Super-admin přístup</p>
+          <AnnaWordmark size="hero" animate />
+          <p className="mt-5 text-body-lg text-secondary">Super-admin přístup</p>
         </header>
 
         <form action={loginAsDemoAdvisor.bind(null, SUPER_ADMIN_ID)}>
           <button
             type="submit"
-            className="group flex w-full items-center gap-5 rounded-[14px] border border-border-subtle bg-surface px-5 py-4 text-left transition-all duration-200 hover:-translate-y-[1px] hover:border-accent"
+            className="group flex w-full items-center gap-4 rounded-[14px] border border-border-subtle bg-surface px-4 py-3.5 text-left transition-all duration-200 hover:border-border-default hover:bg-subtle/50"
           >
-            <div
-              className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[20px] bg-accent-muted"
-              aria-hidden
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width={28}
-                height={28}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-accent opacity-80"
-              >
-                <path d="M12 2 L20 6 V12 C20 17 16 21 12 22 C8 21 4 17 4 12 V6 Z" />
-                <path d="M9 12 L11 14 L15 10" />
-              </svg>
-            </div>
+            <Avatar name="Bartoloměj Rota" size="lg" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-h3 text-primary">Bartoloměj Rota</p>
+              <p className="truncate text-body font-medium text-primary">Bartoloměj Rota</p>
               <p className="truncate text-body-sm text-tertiary">Zakladatel · Harotas s.r.o.</p>
             </div>
-            <span
-              aria-hidden
-              className="text-[18px] text-tertiary transition-colors group-hover:text-accent"
-            >
-              →
-            </span>
+            <CaretRight
+              size={14}
+              weight="regular"
+              className="text-tertiary transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+            />
           </button>
         </form>
 

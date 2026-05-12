@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { AnnaWordmark } from '@/components/brand/anna-wordmark';
 import { LoginAdvisorCard, type AvatarTint } from '@/components/login/login-advisor-card';
-import { PlatformBackdrop } from '@/components/launchpad/platform-backdrop';
 
 const DEMO_ADVISORS: Array<{
   id: string;
@@ -18,16 +17,14 @@ const DEMO_ADVISORS: Array<{
 
 export default function LoginPage() {
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-canvas px-6 py-16">
-      <PlatformBackdrop />
-
-      <div className="relative z-10 w-full max-w-md">
-        <header className="mb-14">
+    <div className="flex min-h-screen w-full items-center justify-center bg-canvas px-6 py-16">
+      <div className="w-full max-w-[420px]">
+        <header className="mb-12">
           <AnnaWordmark size="hero" animate />
-          <p className="mt-6 font-serif italic text-[18px] leading-[1.4] text-secondary">Pro finanční poradce</p>
+          <p className="mt-5 text-body-lg text-secondary">Pro finanční poradce</p>
         </header>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {DEMO_ADVISORS.map((advisor) => (
             <LoginAdvisorCard
               key={advisor.id}
@@ -39,7 +36,7 @@ export default function LoginPage() {
           ))}
         </div>
 
-        <div className="mt-12 flex items-center justify-between">
+        <div className="mt-10 flex items-center justify-between">
           <p className="text-body-sm text-tertiary">4FIN HOLDING · demo</p>
           <Link
             href="/login/admin"

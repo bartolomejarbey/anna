@@ -94,7 +94,7 @@ export function AiAsistentChat() {
         {messages.length === 0 ? (
           <div className="h-full" />
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {messages.map((msg, i) => (
               <MessageBubble
                 key={i}
@@ -102,7 +102,7 @@ export function AiAsistentChat() {
                 isStreaming={isStreaming && i === messages.length - 1 && msg.role === 'assistant'}
               />
             ))}
-            {error && <p className="text-body-sm text-error px-1">{error}</p>}
+            {error && <p className="px-1 text-body-sm text-error">{error}</p>}
             <div ref={bottomRef} />
           </div>
         )}
@@ -122,11 +122,10 @@ export function AiAsistentChat() {
             placeholder="Zeptej se."
             rows={1}
             className={cn(
-              'flex-1 resize-none overflow-hidden rounded-[8px] border border-border-subtle bg-surface',
-              'px-3 py-2.5 text-body text-primary placeholder:text-tertiary',
-              'focus:outline-none focus:border-accent transition-colors',
+              'min-h-[44px] flex-1 resize-none overflow-hidden rounded-[12px] border border-border-default bg-surface',
+              'px-4 py-3 text-body text-primary placeholder:text-tertiary',
+              'transition-[border-color,box-shadow] focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15',
               'disabled:cursor-not-allowed disabled:opacity-50',
-              'min-h-[40px]',
             )}
           />
           <button
@@ -135,10 +134,10 @@ export function AiAsistentChat() {
             disabled={isStreaming || !input.trim()}
             aria-label="Odeslat"
             className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px]',
-              'bg-accent text-accent-text transition-opacity',
-              'hover:opacity-90 active:scale-[0.98]',
-              'disabled:opacity-40 disabled:cursor-not-allowed',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
+              'bg-accent text-accent-text transition-[opacity,transform]',
+              'hover:opacity-90 active:scale-[0.96]',
+              'disabled:cursor-not-allowed disabled:opacity-40',
             )}
           >
             <ArrowUp size={16} weight="regular" />
@@ -160,10 +159,10 @@ function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] px-3 py-2 text-body whitespace-pre-wrap',
+          'max-w-[85%] text-body whitespace-pre-wrap',
           isUser
-            ? 'rounded-[8px] bg-subtle text-primary'
-            : 'text-primary',
+            ? 'rounded-[18px] bg-subtle px-4 py-2.5 text-primary'
+            : 'px-1 text-primary',
         )}
       >
         {message.content}

@@ -1,9 +1,12 @@
 import { Users } from '@phosphor-icons/react/dist/ssr';
 import { currentAdvisorId } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { NewCustomerButton } from '@/components/customers/new-customer-button';
+import { PageShell } from '@/components/ui/page-shell';
+import { PageHeader } from '@/components/ui/page-header';
+import { ListRow } from '@/components/ui/list-row';
+import { Avatar } from '@/components/ui/avatar';
 
 export const metadata = { title: 'Zákazníci — Anna' };
 
@@ -47,11 +50,12 @@ export default async function ZakazniciPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[960px] px-8 py-16">
-      <div className="mb-12 flex items-end justify-between gap-6">
-        <h1 className="text-h1 text-primary">Zákazníci</h1>
-        <NewCustomerButton />
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Zákazníci"
+        description="Lidé, kterým pomáháš s financemi."
+        actions={<NewCustomerButton />}
+      />
 
       {dbError && (
         <p className="mb-8 text-body text-secondary">
@@ -63,38 +67,44 @@ export default async function ZakazniciPage() {
         <EmptyState
           icon={Users}
           heading="Zatím žádný zákazník."
-          description="Přidej zákazníka tlačítkem nahoře nebo začni rovnou schůzkou — Annu poznáš zatímco mluvíš."
+          description="Přidej zákazníka tlačítkem nahoře nebo začni rovnou schůzkou — Anna ho pozná zatímco mluvíš."
           action={{ label: 'Začít schůzku', href: '/schuzky/nova' }}
         />
       )}
 
       {customers.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {customers.map((c) => (
-            <Card
-              key={c.id}
-              variant="compact"
-              className="flex items-center justify-between"
-            >
-              <div className="flex flex-col gap-1">
-                <p className="text-body font-medium text-primary">{c.full_name}</p>
-                <p className="text-body-sm text-tertiary">
-                  {[
-                    c.email,
-                    c.marital_status ? MARITAL[c.marital_status] ?? c.marital_status : null,
-                    c.has_children ? 'děti' : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </div>
-              <div className="text-body-sm text-secondary">
-                {c.monthly_income_czk != null ? CZK.format(c.monthly_income_czk) : '—'}
-              </div>
-            </Card>
-          ))}
-        </div>
+        <ul className="divide-y divide-border-subtle">
+          {customers.map((c) => {
+            const meta = [
+              c.email,
+              c.marital_status ? MARITAL[c.marital_status] ?? c.marital_status : null,
+              c.has_children ? 'děti' : null,
+            ]
+              .filter(Boolean)
+              .join(' · ');
+
+            return (
+              <li key={c.id}>
+                <ListRow
+                  href={`/zakaznici/${c.id}`}
+                  primary={
+                    <span className="inline-flex items-center gap-3">
+                      <Avatar name={c.full_name} size="default" />
+                      <span className="font-medium">{c.full_name}</span>
+                    </span>
+                  }
+                  secondary={meta || '—'}
+                  trailing={
+                    <span className="text-body-sm text-secondary tabular-nums">
+                      {c.monthly_income_czk != null ? CZK.format(c.monthly_income_czk) : '—'}
+                    </span>
+                  }
+                />
+              </li>
+            );
+          })}
+        </ul>
       )}
-    </div>
+    </PageShell>
   );
 }
