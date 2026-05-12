@@ -47,6 +47,12 @@ export default async function DashboardPage() {
             href="/financni-plan"
           />
           <ToolCard
+            title="Lukáš FinPlan"
+            description="Lukášova vývojová kopie finančního plánu. Pracovní verze."
+            icon={<FinplanIcon />}
+            href="/lukas-finplan"
+          />
+          <ToolCard
             title="Zákazníci"
             description="Kontakty, schůzky a nabídky na jednom místě."
             icon={<ZakazniciIcon />}
