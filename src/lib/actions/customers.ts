@@ -109,13 +109,13 @@ const createCustomerSchema = z.object({
     .string()
     .trim()
     .max(200)
-    .optional()
+    .nullish()
     .transform((v) => (v && v.length > 0 ? v : null)),
   phone: z
     .string()
     .trim()
     .max(64)
-    .optional()
+    .nullish()
     .transform((v) => (v && v.length > 0 ? v : null)),
 });
 
