@@ -1,40 +1,54 @@
+import { User, Briefcase } from '@phosphor-icons/react/dist/ssr';
 import type { PlanData } from '@/lib/calculator/finplan/types';
+import { SectionFrame } from '../ui/section-frame';
 
 interface Props {
   customerName: string;
   plan: PlanData;
 }
 
-const CZK = new Intl.NumberFormat('cs-CZ', {
-  style: 'currency',
-  currency: 'CZK',
-  maximumFractionDigits: 0,
+const TODAY_FMT = new Intl.DateTimeFormat('cs-CZ', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
 });
 
 export function ClientHeader({ customerName, plan }: Props) {
-  const { client, cashflow } = plan;
+  const { client, efaInputs } = plan;
+  const displayName = customerName || client.name || 'Zákazník';
+  const employmentLabel =
+    efaInputs.employmentType === 'employee' ? 'Zaměstnání' : 'Podnikání · OSVČ';
 
   return (
-    <header>
-      <p className="anna-section-rule mb-5" aria-hidden />
-      <p className="mb-3 text-caption text-tertiary">Finanční plán</p>
-      <h1 className="mb-8 text-h1 text-primary">{customerName || client.name}</h1>
+    <SectionFrame kicker="Klient" icon={User} first>
+      <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-h1 text-primary">{displayName}</h1>
+          <div className="mt-4 flex flex-wrap items-baseline gap-3 text-body text-secondary">
+            {client.age ? <span>{client.age} let</span> : null}
+            {client.family ? (
+              <>
+                <span className="text-tertiary">·</span>
+                <span>{client.family}</span>
+              </>
+            ) : null}
+            <span className="text-tertiary">·</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Briefcase size={14} weight="regular" />
+              {employmentLabel}
+            </span>
+          </div>
+          {client.address ? (
+            <div className="mt-2 text-body-sm text-tertiary">{client.address}</div>
+          ) : null}
+        </div>
 
-      <dl className="grid grid-cols-2 gap-x-12 gap-y-4 md:grid-cols-4">
-        <Stat label="Věk" value={client.age ? `${client.age}` : '—'} />
-        <Stat label="Rodina" value={client.family || '—'} />
-        <Stat label="Měsíční příjem" value={CZK.format(cashflow.income)} />
-        <Stat label="Měsíční výdaje" value={CZK.format(cashflow.expenses)} />
-      </dl>
-    </header>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="mb-1 text-caption text-tertiary">{label}</dt>
-      <dd className="text-body font-medium text-primary tabular-nums">{value}</dd>
-    </div>
+        <div className="text-right text-body-sm text-tertiary">
+          Finanční plán
+          <br />
+          {TODAY_FMT.format(new Date())}
+        </div>
+      </div>
+    </SectionFrame>
   );
 }

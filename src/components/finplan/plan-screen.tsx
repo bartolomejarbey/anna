@@ -14,12 +14,18 @@ interface Props {
 
 export function PlanScreen({ customerName, plan, sessionId, notes }: Props) {
   return (
-    <div className="flex flex-col gap-20">
+    <div>
       <ClientHeader customerName={customerName} plan={plan} />
       <CashflowSection cashflow={plan.cashflow} />
-      <InsuranceSection insurance={plan.insurance} efa={plan.efa} />
+      <InsuranceSection
+        insurance={plan.insurance}
+        efa={plan.efa}
+        efaInputs={plan.efaInputs}
+      />
       <RetirementSection retirement={plan.retirement} />
-      <NotesPanel sessionId={sessionId} initialNotes={notes} />
+      <div className="border-t border-border-subtle py-20 md:py-24">
+        <NotesPanel sessionId={sessionId} initialNotes={notes} />
+      </div>
     </div>
   );
 }

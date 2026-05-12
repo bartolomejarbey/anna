@@ -1,88 +1,133 @@
+import { Wallet } from '@phosphor-icons/react/dist/ssr';
 import type { Cashflow } from '@/lib/calculator/finplan/types';
+import { SectionFrame } from '../ui/section-frame';
+import { HeroNumber } from '../ui/hero-number';
+import { InfoPopover } from '../ui/info-popover';
+import { fmtCZK } from '../ui/format';
 
 interface Props {
   cashflow: Cashflow;
 }
 
-const CZK = new Intl.NumberFormat('cs-CZ', {
-  style: 'currency',
-  currency: 'CZK',
-  maximumFractionDigits: 0,
-});
-
 export function CashflowSection({ cashflow }: Props) {
-  const surplusPositive = cashflow.regularSurplus >= 0;
+  const surplusPositive = cashflow.surplus >= 0;
+  const regularPositive = cashflow.regularSurplus >= 0;
 
   return (
-    <section>
-      <p className="anna-section-rule mb-5" aria-hidden />
-      <h2 className="mb-2 text-h2 text-primary">Cashflow</h2>
-      <p className="mb-8 text-prose text-secondary">
-        Měsíční tok peněz odvozený z bankovních výpisů. Volné peníze jsou to, co zbývá po
-        nutných výdajích a doporučené úložce na důchod.
-      </p>
+    <SectionFrame kicker="Cash flow" icon={Wallet}>
+      <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-20">
+        <div>
+          <HeroNumber
+            label={
+              <>
+                Volný měsíční zůstatek
+                <InfoPopover label="Co je volný měsíční zůstatek">
+                  Měsíční příjmy minus výdaje. Co zbývá k dispozici na úložky,
+                  rezervy a nepravidelné výdaje.
+                </InfoPopover>
+              </>
+            }
+            value={fmtCZK(cashflow.surplus)}
+            accent={surplusPositive}
+            caption={
+              <>
+                z příjmu {fmtCZK(cashflow.income)} po výdajích{' '}
+                {fmtCZK(cashflow.expenses)}
+              </>
+            }
+          />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Tile
-          label="Příjem"
-          value={CZK.format(cashflow.income)}
-          tone="default"
-        />
-        <Tile
-          label="Výdaje"
-          value={CZK.format(cashflow.expenses)}
-          tone="default"
-        />
-        <Tile
-          label={surplusPositive ? 'Volné peníze' : 'Schodek'}
-          value={CZK.format(Math.abs(cashflow.regularSurplus))}
-          tone={surplusPositive ? 'positive' : 'negative'}
-        />
-      </div>
+          <div className="mt-10 max-w-md rounded-[12px] border border-border-subtle bg-surface px-5 py-4">
+            <div className="flex items-center gap-1.5 text-body-sm text-tertiary">
+              Pravidelný přebytek
+              <InfoPopover label="Co je pravidelný přebytek">
+                Volný zůstatek po odečtu doporučené měsíční úložky na důchod.
+                Tohle máš opravdu volně k dispozici.
+              </InfoPopover>
+            </div>
+            <div
+              className={`mt-1 text-h2 tabular-nums ${
+                regularPositive ? 'text-primary' : 'text-error'
+              }`}
+            >
+              {fmtCZK(cashflow.regularSurplus)}
+            </div>
+            <div className="mt-1 text-body-sm text-tertiary">
+              {fmtCZK(cashflow.surplus)} zůstatek −{' '}
+              {fmtCZK(cashflow.recommendedRetirementSaving)} úložka na důchod
+            </div>
+          </div>
+        </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <SubTile
-          label="Přebytek před úložkou"
-          value={CZK.format(cashflow.surplus)}
-        />
-        <SubTile
-          label="Doporučená úložka na důchod"
-          value={CZK.format(cashflow.recommendedRetirementSaving)}
-        />
+        <div className="rounded-[12px] border border-border-subtle bg-surface px-6 py-7 md:px-8">
+          <div className="mb-5 text-body-sm text-tertiary">Měsíční rozvaha</div>
+          <CashflowBars cashflow={cashflow} />
+        </div>
       </div>
-    </section>
+    </SectionFrame>
   );
 }
 
-function Tile({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: 'default' | 'positive' | 'negative';
-}) {
-  const toneClasses =
-    tone === 'positive'
-      ? 'border-success/30 bg-success-bg'
-      : tone === 'negative'
-        ? 'border-[color-mix(in_oklab,_var(--color-error)_30%,_transparent)] bg-error-bg'
-        : 'border-border-subtle bg-surface';
+function CashflowBars({ cashflow }: { cashflow: Cashflow }) {
+  const max = Math.max(cashflow.income, cashflow.expenses, 1);
+  const incomePct = (cashflow.income / max) * 100;
+  const expensePct = (cashflow.expenses / max) * 100;
+  const surplusPct = (Math.max(cashflow.surplus, 0) / max) * 100;
 
   return (
-    <div className={`rounded-[12px] border p-6 ${toneClasses}`}>
-      <p className="mb-3 text-caption text-tertiary">{label}</p>
-      <p className="text-stat text-primary tabular-nums">{value}</p>
+    <div className="space-y-5">
+      <BarRow
+        label="Příjmy"
+        value={fmtCZK(cashflow.income)}
+        widthPct={incomePct}
+        tone="primary"
+      />
+      <BarRow
+        label="Výdaje"
+        value={fmtCZK(cashflow.expenses)}
+        widthPct={expensePct}
+        tone="muted"
+      />
+      <BarRow
+        label="Zbývá"
+        value={fmtCZK(Math.max(cashflow.surplus, 0))}
+        widthPct={surplusPct}
+        tone="accent"
+      />
     </div>
   );
 }
 
-function SubTile({ label, value }: { label: string; value: string }) {
+function BarRow({
+  label,
+  value,
+  widthPct,
+  tone,
+}: {
+  label: string;
+  value: string;
+  widthPct: number;
+  tone: 'primary' | 'muted' | 'accent';
+}) {
+  const fill =
+    tone === 'accent'
+      ? 'bg-accent'
+      : tone === 'primary'
+        ? 'bg-primary'
+        : 'bg-bg-inset';
+
   return (
-    <div className="rounded-[12px] border border-border-subtle bg-surface p-5">
-      <p className="mb-1 text-caption text-tertiary">{label}</p>
-      <p className="text-h3 text-primary tabular-nums">{value}</p>
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between gap-3 text-body-sm">
+        <span className="text-secondary">{label}</span>
+        <span className="tabular-nums text-primary">{value}</span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${fill}`}
+          style={{ width: `${Math.min(100, Math.max(0, widthPct))}%` }}
+        />
+      </div>
     </div>
   );
 }
